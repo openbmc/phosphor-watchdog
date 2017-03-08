@@ -51,7 +51,7 @@ bool Watchdog::enabled(bool value)
                 return false;
             }
 
-            r = setTimerEnabled(true);
+            r = setTimerEnabled<std::true_type>();
             if (r < 0)
             {
                 return false;
@@ -62,7 +62,7 @@ bool Watchdog::enabled(bool value)
         }
         else
         {
-            r = setTimerEnabled(false);
+            r = setTimerEnabled<std::false_type>();
             if (r < 0)
             {
                 return true;
@@ -123,7 +123,7 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
 {
     if (WatchdogInherits::enabled())
     {
-        auto r = setTimerEnabled(false);
+        auto r = setTimerEnabled<std::false_type>();
         if (r < 0)
         {
             return 0;
@@ -135,7 +135,7 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
             return 0;
         }
 
-        r = setTimerEnabled(true);
+        r = setTimerEnabled<std::true_type>();
         if (r < 0)
         {
             return 0;
@@ -161,25 +161,6 @@ int Watchdog::timeoutHandler(sd_event_source* es, uint64_t usec, void* userData)
     wdg->timeout();
 
     return 0;
-}
-
-// Enable or disable timer: @enable: true to enable, false to disable.
-int Watchdog::setTimerEnabled(bool enable)
-{
-
-    // One-shot timer: the event source will be enabled but automatically
-    // reset to SD_EVENT_OFF after the event source was dispatched once
-    auto state = enable ? SD_EVENT_ONESHOT : SD_EVENT_OFF;
-
-    auto r = sd_event_source_set_enabled(timerEventSource, state);
-    if (r < 0)
-    {
-        log<level::ERR>
-            ("watchdog setTimerEnabled: sd_event_source_set_enabled() error",
-            entry("ERROR=%s", strerror(-r)));
-    }
-
-    return r;
 }
 
 // @value in msec
