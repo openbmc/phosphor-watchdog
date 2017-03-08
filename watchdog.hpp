@@ -2,6 +2,7 @@
 
 #include "xyz/openbmc_project/State/Watchdog/server.hpp"
 
+#include <phosphor-logging/log.hpp>
 #include <systemd/sd-event.h>
 #include <sdbusplus/server.hpp>
 
@@ -13,6 +14,7 @@ namespace state
 {
 namespace watchdog
 {
+using namespace phosphor::logging;
 using WatchdogInherits = sdbusplus::server::object::object<
         sdbusplus::xyz::openbmc_project::State::server::Watchdog>;
 
@@ -69,8 +71,33 @@ class Watchdog : public WatchdogInherits
         // Set the expire time in miliseconds
         int setTimer(uint64_t value);
 
+        enum sd_event_type
+        {
+            SD_EVENT_ONESHOT,
+            SD_EVENT_OFF
+        };
+
         // Enable(start) or diable(stop) timer
-        int setTimerEnabled(bool enable);
+        template <typename T> int setTimerEnabled()
+        {
+            constexpr auto state = T::value ? SD_EVENT_ONESHOT : SD_EVENT_OFF;
+            return setTimerEnabled(state);
+        }
+
+        int setTimerEnabled(sd_event_type state)
+        {
+            // One-shot timer: the event source will be enabled but
+            // automatically reset to SD_EVENT_OFF after the event source was
+            // dispatched once
+            int r = sd_event_source_set_enabled(timerEventSource, state);
+            if (r < 0)
+            {
+                log<level::ERR>("watchdog setTimerEnabled: \
+                                sd_event_source_set_enabled() error",
+                                entry("ERROR=%s", strerror(-r)));
+            }
+            return r;
+        }
 
         // Bus to which this watchdog attaches
         sdbusplus::bus::bus& bus;
