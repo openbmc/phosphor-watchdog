@@ -11,6 +11,7 @@ namespace state
 {
 namespace watchdog
 {
+using namespace phosphor::logging;
 using WatchdogInherits = sdbusplus::server::object::object<
         sdbusplus::xyz::openbmc_project::State::server::Watchdog>;
 
@@ -52,11 +53,10 @@ class Watchdog : public WatchdogInherits
                 timeoutHandler, this);
 
             // Timer is enabled by default. Disable for now.
-            auto r = setTimerEnabled(false);
+            auto r = setTimerEnabled<std::false_type>();
             if (r >= 0)
             {
-                phosphor::logging::log<
-                    phosphor::logging::level::INFO>("watchdog ready");
+                log<level::INFO>("watchdog ready");
             }
         }
 
@@ -93,7 +93,25 @@ class Watchdog : public WatchdogInherits
         int setTimer(uint64_t value);
 
         // Enable(start) or diable(stop) timer
-        int setTimerEnabled(bool enable);
+        template <typename T> int setTimerEnabled()
+        {
+            // One-shot timer: the event source will be enabled but
+            // automatically reset to SD_EVENT_OFF after the event source was
+            // dispatched once
+            auto state = T::value ? SD_EVENT_ONESHOT : SD_EVENT_OFF;
+
+            auto r = sd_event_source_set_enabled(timerEventSource, state);
+            if (r < 0)
+            {
+                log<level::ERR>
+                    ("watchdog setTimerEnabled: \
+                        sd_event_source_set_enabled() error",
+                    entry("ERROR=%s", strerror(-r)));
+            }
+
+            return r;
+        }
+
 
         // Bus to which this watchdog attaches
         sdbusplus::bus::bus& bus;
