@@ -87,7 +87,7 @@ class Watchdog : public WatchdogInherits
                                   uint64_t usec, void* userdata);
 
         // Return current time in usec
-        uint64_t now() const;
+        auto now() const;
 
         // Set the expire time in miliseconds
         int setTimer(uint64_t value);
