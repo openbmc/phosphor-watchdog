@@ -15,11 +15,12 @@ namespace state
 namespace watchdog
 {
 using namespace std::chrono;
+using namespace std::chrono_literals;
 using namespace phosphor::logging;
 
 /* Return current time in usec, using CLOCK_MONOTONIC.
  * Watchdog uses CLOCK_MONOTONIC for sd-event timer. */
-uint64_t Watchdog::now() const
+auto Watchdog::now() const
 {
     struct timespec ts{};
     auto r = clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -27,14 +28,12 @@ uint64_t Watchdog::now() const
     {
         log<level::ERR>("watchdog: clock_gettime() error",
                 entry("ERROR=%s", strerror(errno)));
-        return 0;
+        return 0us;
     }
 
     // convert to microsecond
-    auto currTime = duration_cast<microseconds>
+    return duration_cast<microseconds>
                     (seconds(ts.tv_sec) + nanoseconds(ts.tv_nsec));
-
-    return currTime.count();
 }
 
 bool Watchdog::enabled(bool value)
@@ -110,7 +109,7 @@ uint64_t Watchdog::timeRemaining() const
             }
             // convert to msec
             auto nextMsec = duration_cast<milliseconds>(microseconds(next));
-            auto nowMsec = duration_cast<milliseconds>(microseconds(now()));
+            auto nowMsec = duration_cast<milliseconds>(now());
             timeRemain = (nextMsec > nowMsec) ?
                             (nextMsec - nowMsec).count() : 0;
         }
@@ -167,12 +166,12 @@ int Watchdog::timeoutHandler(sd_event_source* es, uint64_t usec, void* userData)
 // @value in msec
 int Watchdog::setTimer(uint64_t value)
 {
+    auto nextUsec = milliseconds(value);
     // convert to usec
-    auto nextUsec = duration_cast<microseconds>(milliseconds(value));
-    auto next = now() + nextUsec.count();
+    microseconds next = now() + nextUsec;
 
     /* set next expire time */
-    auto r = sd_event_source_set_time(timerEventSource, next);
+    auto r = sd_event_source_set_time(timerEventSource, next.count());
     if (r < 0)
     {
         log<level::ERR>
