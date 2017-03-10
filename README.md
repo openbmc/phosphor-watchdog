@@ -53,7 +53,7 @@ If watchdog timer is disabled, will return 0.
 busctl call xyz.openbmc_project.State.Watchdog.Host \
 /xyz/openbmc_project/state/watchdog/host0 \
 org.freedesktop.DBus.Properties \
-Set ssv xyz.openbmc_project.State.Watchdog TimeRemaining i 10000
+Set ssv xyz.openbmc_project.State.Watchdog TimeRemaining t 10000
 ```
 
 * When time out, a dbus signal named *Timeout* will be triggered.
