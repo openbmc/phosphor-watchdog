@@ -39,8 +39,8 @@ class Watchdog : public WatchdogInherits
          *  @param[in] obj - Object path to attach to.
          */
         Watchdog(sdbusplus::bus::bus& bus,
-                 const char* objpath) :
-                WatchdogInherits(bus, objpath),
+                 const char* objPath) :
+                WatchdogInherits(bus, objPath),
                 bus(bus),
                 timerEventSource(nullptr)
         {
@@ -48,7 +48,7 @@ class Watchdog : public WatchdogInherits
                 bus.get_event(),
                 &timerEventSource,
                 CLOCK_MONOTONIC,
-                UINT_MAX, /* expire time - never */
+                UINT64_MAX, /* expire time - never */
                 0, /* use default event accuracy that the event may be delayed */
                 timeoutHandler, this);
 
