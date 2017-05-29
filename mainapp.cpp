@@ -15,7 +15,9 @@
  */
 
 #include <iostream>
+#include <phosphor-logging/log.hpp>
 #include "argument.hpp"
+#include "timer.hpp"
 
 static void exitWithError(const char* err, char** argv)
 {
@@ -26,6 +28,8 @@ static void exitWithError(const char* err, char** argv)
 
 int main(int argc, char** argv)
 {
+    using namespace phosphor::logging;
+
     // Read arguments.
     auto options = phosphor::watchdog::ArgumentParser(argc, argv);
 
@@ -48,5 +52,29 @@ int main(int argc, char** argv)
     // on meeting a condition.
     auto target = (options)["target"];
 
+    sd_event* event = nullptr;
+    auto r = sd_event_default(&event);
+    if (r < 0)
+    {
+        log<level::ERR>("Error creating a default sd_event handler");
+        return r;
+    }
+    phosphor::watchdog::EventPtr eventP{event};
+    event = nullptr;
+
+    // TODO: Creating the timer object would be inside watchdog implementation.
+    //       Putting this here for completion of this piece
+    phosphor::watchdog::Timer timer(eventP);
+
+    while(!timer.expired())
+    {
+        // -1 denotes wait for ever
+        r = sd_event_run(eventP.get(), (uint64_t)-1);
+        if (r < 0)
+        {
+            log<level::ERR>("Error waiting for events");
+            return -1;
+        }
+    }
     return 0;
 }
