@@ -17,7 +17,7 @@
 #include <iostream>
 #include <phosphor-logging/log.hpp>
 #include "argument.hpp"
-#include "timer.hpp"
+#include "watchdog.hpp"
 
 static void exitWithError(const char* err, char** argv)
 {
@@ -62,11 +62,23 @@ int main(int argc, char** argv)
     phosphor::watchdog::EventPtr eventP{event};
     event = nullptr;
 
-    // TODO: Creating the timer object would be inside watchdog implementation.
-    //       Putting this here for completion of this piece
-    phosphor::watchdog::Timer timer(eventP);
+    // Get a handle to system dbus.
+    auto bus = sdbusplus::bus::new_default();
 
-    while(!timer.expired())
+    // Add systemd object manager.
+    sdbusplus::server::manager::manager(bus, path.c_str());
+
+    // Attach the bus to sd_event to service user requests
+    bus.attach_event(eventP.get(), SD_EVENT_PRIORITY_NORMAL);
+
+    // Create a watchdog object
+    phosphor::watchdog::Watchdog watchdog(bus, path.c_str(), eventP);
+
+    // Claim the bus
+    bus.request_name(service.c_str());
+
+    // Wait until the timer has expired
+    while(!watchdog.timerExpired())
     {
         // -1 denotes wait for ever
         r = sd_event_run(eventP.get(), (uint64_t)-1);
