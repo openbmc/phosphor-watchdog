@@ -32,15 +32,18 @@ class Watchdog : public WatchdogInherits
 
         /** @brief Constructs the Watchdog object
          *
-         *  @param[in] bus   - DBus bus to attach to.
-         *  @param[in] obj   - Object path to attach to.
-         *  @param[in] event - sd_event pointer
+         *  @param[in] bus    - DBus bus to attach to.
+         *  @param[in] obj    - Object path to attach to.
+         *  @param[in] event  - sd_event pointer
+         *  @param[in] target - systemd target to be called into on timeout
          */
         Watchdog(sdbusplus::bus::bus& bus,
                 const char* objPath,
-                EventPtr& event) :
+                EventPtr& event,
+                const std::string& target) :
             WatchdogInherits(bus, objPath),
             bus(bus),
+            target(target),
             timer(event, std::bind(&Watchdog::timeOutHandler, this))
         {
             // Nothing
@@ -85,6 +88,9 @@ class Watchdog : public WatchdogInherits
     private:
         /** @brief sdbusplus handle */
         sdbusplus::bus::bus& bus;
+
+        /** @brief Systemd unit to be started when the timer expires */
+        const std::string& target;
 
         /** @brief Contained timer object */
         Timer timer;
