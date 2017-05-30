@@ -9,6 +9,11 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace phosphor::logging;
 
+// systemd service to kick start a target.
+constexpr auto SYSTEMD_SERVICE    = "org.freedesktop.systemd1";
+constexpr auto SYSTEMD_ROOT       = "/org/freedesktop/systemd1";
+constexpr auto SYSTEMD_INTERFACE  = "org.freedesktop.systemd1.Manager";
+
 // Enable or disable watchdog
 bool Watchdog::enabled(bool value)
 {
@@ -94,9 +99,18 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
 // Optional callback function on timer expiration
 void Watchdog::timeOutHandler()
 {
-    log<level::INFO>("Optional callback called");
-    // TODO: Need to call the user passed systemd
-    // target on this condition
+    if (!target.empty())
+    {
+        auto method = bus.new_method_call(SYSTEMD_SERVICE,
+                                          SYSTEMD_ROOT,
+                                          SYSTEMD_INTERFACE,
+                                          "StartUnit");
+        method.append(target);
+        method.append("replace");
+
+        bus.call_noreply(method);
+    }
+    return;
 }
 
 } // namespace watchdog
