@@ -72,7 +72,8 @@ int main(int argc, char** argv)
     bus.attach_event(eventP.get(), SD_EVENT_PRIORITY_NORMAL);
 
     // Create a watchdog object
-    phosphor::watchdog::Watchdog watchdog(bus, path.c_str(), eventP);
+    phosphor::watchdog::Watchdog watchdog(bus, path.c_str(),
+                                          eventP, target);
 
     // Claim the bus
     bus.request_name(service.c_str());
