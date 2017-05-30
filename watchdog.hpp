@@ -5,7 +5,6 @@
 #include <sdbusplus/server/object.hpp>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
 #include "timer.hpp"
-
 namespace phosphor
 {
 namespace watchdog
@@ -39,7 +38,7 @@ class Watchdog : public WatchdogInherits
                 EventPtr& event) :
             WatchdogInherits(bus, objPath),
             bus(bus),
-            timer(event)
+            timer(event, std::bind(&Watchdog::timeOutHandler, this))
         {
             // Nothing
         }
@@ -86,6 +85,9 @@ class Watchdog : public WatchdogInherits
 
         /** @brief Contained timer object */
         Timer timer;
+
+        /** @brief Optional Callback handler on timer expirartion */
+        void timeOutHandler();
 };
 
 } // namespace watchdog
