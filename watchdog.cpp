@@ -1,7 +1,6 @@
 #include <chrono>
 #include <phosphor-logging/log.hpp>
 #include "watchdog.hpp"
-
 namespace phosphor
 {
 namespace watchdog
@@ -90,6 +89,14 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
         return WatchdogInherits::timeRemaining(value);
     }
     return 0;
+}
+
+// Secondary callback function on timer expiration
+void Watchdog::timeOutHandler()
+{
+    log<level::INFO>("Secondary callback called");
+    // TODO: Need to call the user passed systemd
+    // target on this condition
 }
 
 } // namespace watchdog
