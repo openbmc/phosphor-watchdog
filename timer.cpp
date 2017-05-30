@@ -44,12 +44,16 @@ int Timer::timeoutHandler(sd_event_source* eventSource,
 {
     using namespace phosphor::logging;
 
+    log<level::INFO>("Timer Expired");
+
     auto timer = static_cast<Timer*>(userData);
     timer->expire = true;
 
-    log<level::INFO>("Timer Expired");
-
-    //TODO: Need to call user callback function.
+    // Call an optional callback function
+    if(timer->userCallBack)
+    {
+        timer->userCallBack();
+    }
     return 0;
 }
 

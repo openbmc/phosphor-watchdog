@@ -44,10 +44,14 @@ class Timer
 
         /** @brief Constructs timer object
          *
-         *  @param[in] event   - sd_event unique pointer
+         *  @param[in] event        - sd_event unique pointer
+         *  @param[in] userCallBack - Optional function callback
+         *                            for timer expiration
          */
-        Timer(EventPtr& event)
-            : event(event)
+        Timer(EventPtr& event,
+              std::function<void()> userCallBack = nullptr)
+            : event(event),
+              userCallBack(userCallBack)
         {
             // Initialize the timer
             initialize();
@@ -98,6 +102,11 @@ class Timer
 
         /** @brief Set to true when the timeoutHandler is called into */
         bool expire = false;
+
+        /** @brief Optional function to call on timer expiration
+         *         This is called from timeout handler.
+         */
+        std::function<void()> userCallBack;
 
         /** @brief Initializes the timer object with infinite
          *         expiration time and sets up the callback handler

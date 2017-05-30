@@ -41,7 +41,7 @@ class Watchdog : public WatchdogInherits
                 EventPtr& event) :
             WatchdogInherits(bus, objPath),
             bus(bus),
-            timer(event)
+            timer(event, std::bind(&Watchdog::timeOutHandler, this))
         {
             // Nothing
         }
@@ -88,6 +88,9 @@ class Watchdog : public WatchdogInherits
 
         /** @brief Contained timer object */
         Timer timer;
+
+        /** @brief Secondary Callback handler on timer expirartion */
+        void timeOutHandler();
 };
 
 } // namespace watchdog
