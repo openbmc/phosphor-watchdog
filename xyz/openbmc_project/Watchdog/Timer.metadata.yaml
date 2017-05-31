@@ -1,0 +1,4 @@
+- name: InternalError
+  meta:
+    - str: "ERROR_DESCRIPTION=%s"
+      type: string
