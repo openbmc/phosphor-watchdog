@@ -34,6 +34,7 @@ watchdog_test_LDFLAGS = ${utestLDFLAGS}
 timer_test_SOURCES = timer_test.cpp
 watchdog_test_SOURCES = watchdog_test.cpp
 
-timer_test_LDADD = $(top_builddir)/timer.o
-watchdog_test_LDADD = $(top_builddir)/timer.o \
-                      $(top_builddir)/watchdog.o
+timer_test_LDADD =  $(top_builddir)/timer.o
+
+watchdog_test_LDADD = $(top_builddir)/watchdog.o \
+                      $(top_builddir)/timer.o

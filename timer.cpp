@@ -1,11 +1,19 @@
 #include <chrono>
 #include <systemd/sd-event.h>
 #include <phosphor-logging/log.hpp>
+#include <phosphor-logging/elog.hpp>
+#include <phosphor-logging/elog-errors.hpp>
+#include <xyz/openbmc_project/Common/error.hpp>
 #include "timer.hpp"
 namespace phosphor
 {
 namespace watchdog
 {
+
+// For throwing exception
+using namespace phosphor::logging;
+using InternalFailure = sdbusplus::xyz::openbmc_project::Common::
+                            Error::InternalFailure;
 
 // Initializes the timer object
 void Timer::initialize()
@@ -13,8 +21,8 @@ void Timer::initialize()
     // This can not be called more than once.
     if (eventSource.get())
     {
-        // TODO: Need to throw elog exception stating its already added.
-        throw std::runtime_error("Timer already initialized");
+        log<level::ERR>("Timer already initialized");
+        elog<InternalFailure>();
     }
 
     // Add infinite expiration time
@@ -30,8 +38,8 @@ void Timer::initialize()
 
     if (r < 0)
     {
-        // TODO: throw elog exception
-        throw std::runtime_error("Timer initialization failed");
+        log<level::ERR>("Timer initialization failed");
+        elog<InternalFailure>();
     }
 
     // Disable the timer for now
@@ -68,6 +76,8 @@ std::chrono::microseconds Timer::getCurrentTime()
 // Sets the expiration time and arms the timer
 void Timer::start(std::chrono::microseconds usec)
 {
+    using namespace std::chrono;
+
     // Get the current MONOTONIC time and add the delta
     auto expireTime = getCurrentTime() + usec;
 
@@ -76,8 +86,9 @@ void Timer::start(std::chrono::microseconds usec)
                                       expireTime.count());
     if (r < 0)
     {
-        // TODO throw elog exception
-        throw std::runtime_error("Error setting the expiration time");
+        log<level::ERR>("Error setting the expiration time",
+                entry("MSEC=%llu",duration_cast<milliseconds>(usec).count()));
+        elog<InternalFailure>();
     }
 }
 
@@ -88,8 +99,8 @@ int Timer::getEnabled() const
     auto r = sd_event_source_get_enabled(eventSource.get(), &enabled);
     if (r < 0)
     {
-        // TODO: Need to throw elog exception
-        throw std::runtime_error("Error geting current time enablement state");
+        log<level::ERR>("Error geting current timer type enablement state");
+        elog<InternalFailure>();
     }
     return enabled;
 }
@@ -100,8 +111,9 @@ void Timer::setEnabled(int type)
     auto r = sd_event_source_set_enabled(eventSource.get(), type);
     if (r < 0)
     {
-        // TODO: Need to throw elog exception
-        throw std::runtime_error("Error altering enabled property");
+        log<level::ERR>("Error setting the timer type",
+                entry("TYPE=%d",type));
+        elog<InternalFailure>();
     }
 }
 
@@ -112,8 +124,8 @@ std::chrono::microseconds Timer::getRemaining() const
     auto r = sd_event_source_get_time(eventSource.get(), &next);
     if (r < 0)
     {
-        // TODO: Need to throw elog exception
-        throw std::runtime_error("Error altering enabled property");
+        log<level::ERR>("Error fetching remaining time to expire");
+        elog<InternalFailure>();
     }
     return std::chrono::microseconds(next);
 }
