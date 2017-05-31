@@ -12,8 +12,8 @@ namespace phosphor
 {
 namespace watchdog
 {
-using WatchdogInherits = sdbusplus::server::object::object<
-        sdbusplus::xyz::openbmc_project::State::server::Watchdog>;
+namespace Base = sdbusplus::xyz::openbmc_project::State::server;
+using WatchdogInherits = sdbusplus::server::object::object<Base::Watchdog>;
 
 /** @class Watchdog
  *  @brief OpenBMC watchdog implementation.
@@ -61,6 +61,11 @@ class Watchdog : public WatchdogInherits
          *  @return : 'true' if success, 'false' otherwise
          */
         bool enabled(bool value) override;
+
+        /** @brief Using Base class's getter method.
+         *         This is more of a need from gtest
+         */
+        using Base::Watchdog::enabled;
 
         /** @brief Gets the remaining time before watchdog expires.
          *
