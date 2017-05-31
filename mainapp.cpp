@@ -16,8 +16,11 @@
 
 #include <iostream>
 #include <phosphor-logging/log.hpp>
+#include <phosphor-logging/elog.hpp>
+#include <xyz/openbmc_project/Watchdog/Timer/error.hpp>
 #include "argument.hpp"
 #include "watchdog.hpp"
+#include "elog-errors.hpp"
 
 static void exitWithError(const char* err, char** argv)
 {
@@ -29,7 +32,8 @@ static void exitWithError(const char* err, char** argv)
 int main(int argc, char** argv)
 {
     using namespace phosphor::logging;
-
+    using InternalError = sdbusplus::xyz::openbmc_project::Watchdog::
+                                Timer::Error::InternalError;
     // Read arguments.
     auto options = phosphor::watchdog::ArgumentParser(argc, argv);
 
@@ -71,23 +75,34 @@ int main(int argc, char** argv)
     // Attach the bus to sd_event to service user requests
     bus.attach_event(eventP.get(), SD_EVENT_PRIORITY_NORMAL);
 
-    // Create a watchdog object
-    phosphor::watchdog::Watchdog watchdog(bus, path.c_str(),
-                                          eventP, std::move(target));
-
-    // Claim the bus
-    bus.request_name(service.c_str());
-
-    // Wait until the timer has expired
-    while(!watchdog.timerExpired())
+    try
     {
-        // -1 denotes wait for ever
-        r = sd_event_run(eventP.get(), (uint64_t)-1);
-        if (r < 0)
+        // Create a watchdog object
+        phosphor::watchdog::Watchdog watchdog(bus, path.c_str(),
+                                              eventP, std::move(target));
+        // Claim the bus
+        bus.request_name(service.c_str());
+
+        // Wait until the timer has expired
+        while(!watchdog.timerExpired())
         {
-            log<level::ERR>("Error waiting for events");
-            return -1;
+            // -1 denotes wait for ever
+            r = sd_event_run(eventP.get(), (uint64_t)-1);
+            if (r < 0)
+            {
+                elog<InternalError>(
+                        phosphor::logging::xyz::openbmc_project::
+                        Watchdog::Timer::InternalError::ERROR_DESCRIPTION(
+                            "Error waiting for events"));
+            }
         }
+    }
+    catch(InternalError& e)
+    {
+        phosphor::logging::commit<InternalError>();
+
+        // Need a coredump in the error cases.
+        std::terminate();
     }
     return 0;
 }
