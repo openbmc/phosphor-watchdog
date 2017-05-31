@@ -23,5 +23,6 @@ utest_LDFLAGS = -lgtest_main -lgtest \
 
 utest_SOURCES = utest.cpp
 utest_LDADD = $(top_builddir)/watchdog.o \
-			  $(top_builddir)/timer.o
+			  $(top_builddir)/timer.o \
+			  $(top_builddir)/xyz/openbmc_project/Watchdog/Timer/error.o
 
