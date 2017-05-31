@@ -17,7 +17,7 @@ constexpr auto SYSTEMD_INTERFACE  = "org.freedesktop.systemd1.Manager";
 // Enable or disable watchdog
 bool Watchdog::enabled(bool value)
 {
-    if (WatchdogInherits::enabled() != value)
+    if (this->enabled() != value)
     {
         if (value)
         {
@@ -48,7 +48,7 @@ uint64_t Watchdog::timeRemaining() const
 {
     uint64_t timeRemain = 0;
 
-    if (WatchdogInherits::enabled())
+    if (this->enabled())
     {
         // timer may have already expired and disabled
         if (timer.getEnabled() != SD_EVENT_OFF)
@@ -73,7 +73,7 @@ uint64_t Watchdog::timeRemaining() const
 // Reset the timer to a new expiration value
 uint64_t Watchdog::timeRemaining(uint64_t value)
 {
-    if (WatchdogInherits::enabled())
+    if (this->enabled())
     {
         // Disable the timer
         timer.setEnabled<std::false_type>();

@@ -9,8 +9,8 @@ namespace phosphor
 {
 namespace watchdog
 {
-using WatchdogInherits = sdbusplus::server::object::object<
-        sdbusplus::xyz::openbmc_project::State::server::Watchdog>;
+namespace Base = sdbusplus::xyz::openbmc_project::State::server;
+using WatchdogInherits = sdbusplus::server::object::object<Base::Watchdog>;
 
 /** @class Watchdog
  *  @brief OpenBMC watchdog implementation.
@@ -45,6 +45,12 @@ class Watchdog : public WatchdogInherits
         {
             // Nothing
         }
+
+        /** @brief Since we are overriding the setter-enabled but not the
+         *         getter-enabled, we need to have this using in order to
+         *         allow passthrough usage of the getter-enabled.
+         */
+        using Base::Watchdog::enabled;
 
         /** @brief Enable or disable watchdog
          *         If a watchdog state is changed from disable to enable,

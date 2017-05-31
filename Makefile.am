@@ -18,3 +18,5 @@ phosphor_watchdog_CXXFLAGS = $(SYSTEMD_CFLAGS)\
                              ${PHOSPHOR_LOGGING_CFLAGS} \
                              ${SDBUSPLUS_CFLAGS} \
                              ${PHOSPHOR_DBUS_INTERFACES_CFLAGS}
+
+SUBDIRS = test
