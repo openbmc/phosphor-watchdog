@@ -84,6 +84,9 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     auto newTime = duration_cast<milliseconds>(expireTime);
     wdog.timeRemaining(newTime.count());
 
+    // Expect an update in the Interval
+    EXPECT_EQ(newTime.count(), wdog.interval());
+
     // Waiting for expiration
     int count = 0;
     while(count < expireTime.count() && !wdog.timerExpired())
