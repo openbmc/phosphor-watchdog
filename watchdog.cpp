@@ -90,6 +90,9 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
         log<level::INFO>("watchdog: reset timer",
                          entry("VALUE=%llu", value));
 
+        // Update Interval in Base class.
+        this->interval(value);
+
         // Update Base class data.
         return WatchdogInherits::timeRemaining(value);
     }
