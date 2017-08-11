@@ -20,6 +20,7 @@
 #include <phosphor-logging/elog-errors.hpp>
 #include <xyz/openbmc_project/Common/error.hpp>
 #include "argument.hpp"
+#include "config.h"
 #include "watchdog.hpp"
 
 static void exitWithError(const char* err, char** argv)
@@ -36,6 +37,14 @@ int main(int argc, char** argv)
                                 Error::InternalFailure;
     // Read arguments.
     auto options = phosphor::watchdog::ArgumentParser(argc, argv);
+
+    // Parse out continue argument.
+    auto continue_param = (options)["continue"];
+    auto continue_after_timeout = false; // Default it to exit on watchdog timeout
+    if (continue_param == phosphor::watchdog::ArgumentParser::trueString)
+    {
+        continue_after_timeout = true;
+    }
 
     // Parse out path argument.
     auto path = (options)["path"];
@@ -83,8 +92,8 @@ int main(int argc, char** argv)
         // Claim the bus
         bus.request_name(service.c_str());
 
-        // Wait until the timer has expired
-        while(!watchdog.timerExpired())
+        // Loop forever processing events
+        while (true)
         {
             // -1 denotes wait for ever
             r = sd_event_run(eventP.get(), (uint64_t)-1);
@@ -92,6 +101,23 @@ int main(int argc, char** argv)
             {
                 log<level::ERR>("Error waiting for events");
                 elog<InternalFailure>();
+            }
+
+            // The timer expiring is an event that breaks from the above.
+            if (watchdog.timerExpired())
+            {
+                // The timer expired, we called the systemd target.
+                if (continue_after_timeout)
+                {
+                    // The watchdog will be disabled but left running to be
+                    // re-enabled.
+                    watchdog.enabled(false);
+                }
+                else
+                {
+                    // The watchdog daemon will now exit.
+                    break;
+                }
             }
         }
     }

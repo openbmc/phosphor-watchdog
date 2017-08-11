@@ -56,6 +56,11 @@ class Timer
             initialize();
         }
 
+        void clearExpired(void)
+        {
+            expire = false;
+        }
+
         /** @brief Tells whether the timer is expired or not */
         inline auto expired() const
         {
