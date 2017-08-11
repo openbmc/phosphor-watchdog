@@ -28,12 +28,13 @@ using namespace std::string_literals;
 const std::string ArgumentParser::trueString = "true"s;
 const std::string ArgumentParser::emptyString = ""s;
 
-const char* ArgumentParser::optionStr = "p:s:t:?h";
+const char* ArgumentParser::optionStr = "p:s:t:c:?h";
 const option ArgumentParser::options[] =
 {
     { "path",     required_argument,  nullptr,   'o' },
     { "service",  required_argument,  nullptr,   's' },
     { "target",   required_argument,  nullptr,   't' },
+    { "continue", no_argument,        nullptr,   'c' },
     { "help",     no_argument,        nullptr,   'h' },
     { 0, 0, 0, 0},
 };
@@ -88,6 +89,8 @@ void ArgumentParser::usage(char** argv)
                                                  "State.Watchdog.Host\n";
     std::cerr << " [--target=<systemd unit>]     Systemd unit to be called on"
                                                  " timeout\n";
+    std::cerr << " [--continue]                  Continue daemon after"
+                                                 " watchdog timeout.\n";
 }
 } // namespace watchdog
 } // namespace phosphor

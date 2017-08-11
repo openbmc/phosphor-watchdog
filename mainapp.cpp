@@ -37,6 +37,15 @@ int main(int argc, char** argv)
     // Read arguments.
     auto options = phosphor::watchdog::ArgumentParser(argc, argv);
 
+    // Parse out continue argument.
+    auto continueParam = (options)["continue"];
+    // Default it to exit on watchdog timeout
+    auto continueAfterTimeout = false;
+    if (continueParam == phosphor::watchdog::ArgumentParser::trueString)
+    {
+        continueAfterTimeout = true;
+    }
+
     // Parse out path argument.
     auto path = (options)["path"];
     if (path == phosphor::watchdog::ArgumentParser::emptyString)
@@ -83,8 +92,8 @@ int main(int argc, char** argv)
         // Claim the bus
         bus.request_name(service.c_str());
 
-        // Wait until the timer has expired
-        while(!watchdog.timerExpired())
+        // Loop forever processing events
+        while (true)
         {
             // -1 denotes wait for ever
             r = sd_event_run(eventP.get(), (uint64_t)-1);
@@ -92,6 +101,23 @@ int main(int argc, char** argv)
             {
                 log<level::ERR>("Error waiting for events");
                 elog<InternalFailure>();
+            }
+
+            // The timer expiring is an event that breaks from the above.
+            if (watchdog.timerExpired())
+            {
+                // Either disable the timer or exit.
+                if (continueAfterTimeout)
+                {
+                    // The watchdog will be disabled but left running to be
+                    // re-enabled.
+                    watchdog.enabled(false);
+                }
+                else
+                {
+                    // The watchdog daemon will now exit.
+                    break;
+                }
             }
         }
     }
