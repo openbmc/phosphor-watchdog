@@ -45,6 +45,17 @@ AS_IF([test "x$enable_oe_sdk" == "xyes"],
     AC_SUBST([OESDK_TESTCASE_FLAGS], [$testcase_flags])
 )
 
+AC_ARG_ENABLE([stop-watchdog-on-expiration],
+              AS_HELP_STRING([--enable-stop-watchdog-on-expiration], [When the watchdog timer fires, disable timer instead of exiting program])
+)
+
+AC_ARG_VAR(DISABLE_AFTER_EXPIRATION, [When the watchdog timer fires, disable timer instead of exiting program])
+
+AS_IF([test "x$enable_stop_watchdog_on_expiration" == "xyes"],
+      [DISABLE_AFTER_EXPIRATION="yes"]
+      AC_DEFINE_UNQUOTED([DISABLE_AFTER_EXPIRATION], ["$DISABLE_AFTER_EXPIRATION"], [When the watchdog timer fires, disable timer instead of exiting program])
+)
+
 # Create configured output
 AC_CONFIG_FILES([Makefile test/Makefile])
 AC_OUTPUT
