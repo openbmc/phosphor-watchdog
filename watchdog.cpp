@@ -36,6 +36,7 @@ bool Watchdog::enabled(bool value)
         else
         {
             timer.setEnabled<std::false_type>();
+            timer.clearExpired();
             log<level::INFO>("watchdog: disabled");
         }
     }
