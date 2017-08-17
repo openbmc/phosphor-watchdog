@@ -87,9 +87,6 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
         // Enable the timer.
         timer.setEnabled<std::true_type>();
 
-        // Update Interval in Base class.
-        this->interval(value);
-
         // Update Base class data.
         return WatchdogInherits::timeRemaining(value);
     }
