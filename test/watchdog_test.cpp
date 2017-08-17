@@ -84,9 +84,6 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     auto newTime = duration_cast<milliseconds>(expireTime);
     wdog.timeRemaining(newTime.count());
 
-    // Expect an update in the Interval
-    EXPECT_EQ(newTime.count(), wdog.interval());
-
     // Waiting for expiration
     int count = 0;
     while(count < expireTime.count() && !wdog.timerExpired())
@@ -103,6 +100,18 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
 
     // Make sure secondary callback was not called.
     EXPECT_EQ(false, expired);
+}
+
+/** @brief Make sure the Inteval can be updated directly.
+ */
+TEST_F(WdogTest, verifyIntervalUpdateReceived)
+{
+    auto expireTime = seconds(5s);
+    auto newTime = duration_cast<milliseconds>(expireTime);
+    wdog.interval(newTime.count());
+
+    // Expect an update in the Interval
+    EXPECT_EQ(newTime.count(), wdog.interval());
 }
 
 /** @brief Make sure that watchdog is started and enabled.
