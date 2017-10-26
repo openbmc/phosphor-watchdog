@@ -74,7 +74,7 @@ class Watchdog : public WatchdogInherits
 
         /** @brief Reset timer to expire after new timeout in milliseconds.
          *
-         *  @param[in] value - the time in miliseconds after which
+         *  @param[in] value - the time in milliseconds after which
          *                     the watchdog will expire
          *
          *  @return: updated timeout value if watchdog is enabled.

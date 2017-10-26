@@ -102,7 +102,7 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     EXPECT_EQ(false, expired);
 }
 
-/** @brief Make sure the Inteval can be updated directly.
+/** @brief Make sure the Interval can be updated directly.
  */
 TEST_F(WdogTest, verifyIntervalUpdateReceived)
 {
