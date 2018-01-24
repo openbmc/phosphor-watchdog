@@ -42,6 +42,13 @@ const option ArgumentParser::options[] =
 ArgumentParser::ArgumentParser(int argc, char** argv)
 {
     int option = 0;
+
+    // We have to reset optind because getopt_long keeps global state
+    // and uses optind to track what argv index it needs to process next.
+    // Since this object may be instantiated more than once or test suites may
+    // already process instructions, optind may not be initialized to point to
+    // the beginning of our argv.
+    optind = 1;
     while (-1 != (option = getopt_long(argc, argv, optionStr, options, nullptr)))
     {
         if ((option == '?') || (option == 'h'))
