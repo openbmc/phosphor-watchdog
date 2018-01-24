@@ -79,6 +79,9 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
         // Disable the timer
         timer.setEnabled<std::false_type>();
 
+        log<level::DEBUG>("watchdog: update time remaining",
+                         entry("INTERVAL=%llu", value));
+
         // Timer handles all in microseconds and hence converting
         auto usec = duration_cast<microseconds>(
                                   milliseconds(value));
