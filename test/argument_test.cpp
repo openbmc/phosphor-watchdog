@@ -1,10 +1,12 @@
 #include <string>
+#include <vector>
 
 #include "argument.hpp"
 #include "argument_test.hpp"
 
 static const std::string expected_path1 = "/arg1-test-path";
 static const std::string expected_target1 = "t1.target";
+static const std::string expected_target2 = "t2.target";
 
 // Allow for a single unrecognized option then the Usage printout
 static const std::string invalid_arg_regex =
@@ -29,9 +31,9 @@ TEST_F(ArgumentTest, NoOptions)
         &arg0[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["path"]);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["continue"]);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["arbitrary_unknown"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["arbitrary_unknown"]);
 }
 
 /** @brief ArgumentParser should return true for an existing no-arg option
@@ -46,8 +48,9 @@ TEST_F(ArgumentTest, LongOptionNoArg)
         &arg0[0], &arg_continue[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["path"]);
-    EXPECT_EQ(ArgumentParser::trueString, ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({ArgumentParser::trueString}),
+            ap["continue"]);
 }
 
 /** @brief ArgumentParser should return a string for long options that
@@ -62,7 +65,7 @@ TEST_F(ArgumentTest, LongOptionRequiredArg)
         &arg0[0], &arg_path[0], &arg_path_val[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(expected_path1, ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
 }
 
 /** @brief ArgumentParser should return a string for long options that
@@ -76,7 +79,7 @@ TEST_F(ArgumentTest, LongOptionInlineArg)
         &arg0[0], &arg_path[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(expected_path1, ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
 }
 
 /** @brief ArgumentParser should return a string for short options that
@@ -91,12 +94,10 @@ TEST_F(ArgumentTest, ShortOptionRequiredArg)
         &arg0[0], &arg_path[0], &arg_path_val[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(expected_path1, ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
 }
 
 /** @brief ArgumentParser should be able to handle parsing multiple options
- *         Make sure that when passed multiple of the same option it uses
- *         the argument to the option passed last
  *         Make sure this works for no-arg and required-arg type options
  *         Make sure this works between short and long options
  */
@@ -105,7 +106,7 @@ TEST_F(ArgumentTest, MultiOptionOverride)
     std::string arg_continue_short = "-c";
     std::string arg_path = "--path=" + expected_path1;
     std::string arg_continue_long = "--continue";
-    std::string arg_target = "--target=/unused-path";
+    std::string arg_target = "--target=" + expected_target2;
     std::string arg_target_short = "-t";
     std::string arg_target_val = expected_target1;
     char * const args[] = {
@@ -113,9 +114,12 @@ TEST_F(ArgumentTest, MultiOptionOverride)
         &arg_target[0], &arg_target_short[0], &arg_target_val[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(expected_path1, ap["path"]);
-    EXPECT_EQ(ArgumentParser::trueString, ap["continue"]);
-    EXPECT_EQ(expected_target1, ap["target"]);
+    EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({
+                ArgumentParser::trueString, ArgumentParser::trueString}),
+            ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({expected_target2, expected_target1}),
+            ap["target"]);
 }
 
 /** @brief ArgumentParser should print usage information when given a help

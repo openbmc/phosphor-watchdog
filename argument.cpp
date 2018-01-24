@@ -25,8 +25,8 @@ namespace watchdog
 
 using namespace std::string_literals;
 
+const std::vector<std::string> emptyArg;
 const std::string ArgumentParser::trueString = "true"s;
-const std::string ArgumentParser::emptyString = ""s;
 
 const char* ArgumentParser::optionStr = "p:s:t:ch";
 const option ArgumentParser::options[] =
@@ -41,7 +41,8 @@ const option ArgumentParser::options[] =
 
 ArgumentParser::ArgumentParser(int argc, char * const argv[])
 {
-    int option = 0;
+    int option;
+    int opt_idx = 0;
 
     // We have to reset optind because getopt_long keeps global state
     // and uses optind to track what argv index it needs to process next.
@@ -49,33 +50,35 @@ ArgumentParser::ArgumentParser(int argc, char * const argv[])
     // already process instructions, optind may not be initialized to point to
     // the beginning of our argv.
     optind = 0;
-    while (-1 != (option = getopt_long(argc, argv, optionStr, options, nullptr)))
+    while (-1 != (option = getopt_long(argc, argv, optionStr, options, &opt_idx)))
     {
-        if ((option == '?') || (option == 'h'))
+        if (option == '?' || option == 'h')
         {
             usage(argv);
             exit(-1);
         }
 
-        auto i = &options[0];
-        while ((i->val != option) && (i->val != 0))
+        auto i = &options[opt_idx];
+        while (i->val && i->val != option)
         {
             ++i;
         }
 
         if (i->val)
         {
-            arguments[i->name] = (optarg ? optarg : trueString);
+            arguments[i->name].push_back(optarg ? optarg : trueString);
         }
+
+        opt_idx = 0;
     }
 }
 
-const std::string& ArgumentParser::operator[](const std::string& opt)
+const std::vector<std::string>& ArgumentParser::operator[](const std::string& opt)
 {
     auto i = arguments.find(opt);
     if (i == arguments.end())
     {
-        return emptyString;
+        return emptyArg;
     }
     else
     {
