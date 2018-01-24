@@ -25,8 +25,8 @@ namespace watchdog
 
 using namespace std::string_literals;
 
+const std::vector<std::string> emptyArg;
 const std::string ArgumentParser::trueString = "true"s;
-const std::string ArgumentParser::emptyString = ""s;
 
 const char* ArgumentParser::optionStr = "p:s:t:c:?h";
 const option ArgumentParser::options[] =
@@ -41,8 +41,10 @@ const option ArgumentParser::options[] =
 
 ArgumentParser::ArgumentParser(int argc, char** argv)
 {
-    int option = 0;
-    while (-1 != (option = getopt_long(argc, argv, optionStr, options, nullptr)))
+    int option;
+    int long_idx;
+
+    while (-1 != (option = getopt_long(argc, argv, optionStr, options, &long_idx)))
     {
         if ((option == '?') || (option == 'h'))
         {
@@ -50,25 +52,20 @@ ArgumentParser::ArgumentParser(int argc, char** argv)
             exit(-1);
         }
 
-        auto i = &options[0];
-        while ((i->val != option) && (i->val != 0))
-        {
-            ++i;
-        }
-
+        auto i = &options[long_idx];
         if (i->val)
         {
-            arguments[i->name] = (i->has_arg ? optarg : trueString);
+            arguments[i->name].push_back(i->has_arg ? optarg : trueString);
         }
     }
 }
 
-const std::string& ArgumentParser::operator[](const std::string& opt)
+const std::vector<std::string>& ArgumentParser::operator[](const std::string& opt)
 {
     auto i = arguments.find(opt);
     if (i == arguments.end())
     {
-        return emptyString;
+        return emptyArg;
     }
     else
     {

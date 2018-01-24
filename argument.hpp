@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace phosphor
 {
@@ -35,7 +36,7 @@ class ArgumentParser
          *
          *  @return argument which is a standard optarg
          */
-        const std::string& operator[](const std::string& opt);
+        const std::vector<std::string>& operator[](const std::string& opt);
 
         /** @brief Displays usage
          *
@@ -46,12 +47,9 @@ class ArgumentParser
         /** @brief Set to 'true' when an option is passed */
         static const std::string trueString;
 
-        /** @brief Set to '' when an option is not passed */
-        static const std::string emptyString;
-
     private:
         /** @brief Option to argument mapping */
-        std::map<const std::string, std::string> arguments;
+        std::map<const std::string, std::vector<std::string> > arguments;
 
         /** @brief Array of struct options as needed by getopt_long */
         static const option options[];

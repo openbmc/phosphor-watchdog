@@ -41,29 +41,44 @@ int main(int argc, char** argv)
     auto continueParam = (options)["continue"];
     // Default it to exit on watchdog timeout
     auto continueAfterTimeout = false;
-    if (continueParam == phosphor::watchdog::ArgumentParser::trueString)
+    if (!continueParam.empty())
     {
         continueAfterTimeout = true;
     }
 
     // Parse out path argument.
-    auto path = (options)["path"];
-    if (path == phosphor::watchdog::ArgumentParser::emptyString)
+    auto pathParam = (options)["path"];
+    if (pathParam.empty())
     {
         exitWithError("Path not specified.", argv);
     }
+    if (pathParam.size() > 1)
+    {
+        exitWithError("Multiple paths specified.", argv);
+    }
+    auto path = pathParam.back();
 
     // Parse out service name argument
-    auto service = (options)["service"];
-    if (service == phosphor::watchdog::ArgumentParser::emptyString)
+    auto serviceParam = (options)["service"];
+    if (serviceParam.empty())
     {
         exitWithError("Service not specified.", argv);
     }
+    if (serviceParam.size() > 1)
+    {
+        exitWithError("Multiple services specified.", argv);
+    }
+    auto service = serviceParam.back();
 
     // Parse out target argument. It is fine if the caller does not
     // pass this if they are not interested in calling into any target
     // on meeting a condition.
-    auto target = (options)["target"];
+    auto targetParam = (options)["target"];
+    if (targetParam.size() > 1)
+    {
+        exitWithError("Multiple targets specified.", argv);
+    }
+    auto target = targetParam.back();
 
     sd_event* event = nullptr;
     auto r = sd_event_default(&event);
