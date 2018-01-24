@@ -19,9 +19,9 @@ TEST_F(ArgumentTest, EmptyArgs)
         &arg0[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["path"]);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["continue"]);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["arbitrary_unknown"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["arbitrary_unknown"]);
 }
 
 TEST_F(ArgumentTest, BoolArg)
@@ -32,8 +32,9 @@ TEST_F(ArgumentTest, BoolArg)
         &arg0[0], &arg_continue[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["path"]);
-    EXPECT_EQ(ArgumentParser::trueString, ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({ArgumentParser::trueString}),
+            ap["continue"]);
 }
 
 TEST_F(ArgumentTest, StringArgLong)
@@ -46,8 +47,8 @@ TEST_F(ArgumentTest, StringArgLong)
         &arg0[0], &arg_path[0], &arg_path_val[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(expected_path, ap["path"]);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({expected_path}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["continue"]);
 }
 
 TEST_F(ArgumentTest, StringArgLongCombined)
@@ -59,8 +60,8 @@ TEST_F(ArgumentTest, StringArgLongCombined)
         &arg0[0], &arg_path[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(expected_path, ap["path"]);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({expected_path}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["continue"]);
 }
 
 TEST_F(ArgumentTest, StringArgShort)
@@ -73,27 +74,30 @@ TEST_F(ArgumentTest, StringArgShort)
         &arg0[0], &arg_path[0], &arg_path_val[0], &arg_extra[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
-    EXPECT_EQ(expected_path, ap["path"]);
-    EXPECT_EQ(ArgumentParser::emptyString, ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>({expected_path}), ap["path"]);
+    EXPECT_EQ(std::vector<std::string>({}), ap["continue"]);
 }
 
 TEST_F(ArgumentTest, MultiArg)
 {
-    const std::string expected_path = "/arg-test-path";
-    const std::string expected_target = "reboot-host.target";
+    const std::vector<std::string> expected_path({"/arg-test-path"});
+    const std::vector<std::string> expected_continue({
+            ArgumentParser::trueString, ArgumentParser::trueString});
+    const std::vector<std::string> expected_target({
+            "bad.target", "reboot-host.target"});
     std::string arg_continue_short = "-c";
-    std::string arg_path = "--path=" + expected_path;
+    std::string arg_path = "--path=" + expected_path[0];
     std::string arg_continue_long = "--continue";
-    std::string arg_target = "--target=bad.target";
+    std::string arg_target = "--target=" + expected_target[0];
     std::string arg_target_short = "-t";
-    std::string arg_target_val = expected_target;
+    std::string arg_target_val = expected_target[1];
     char * const args[] = {
         &arg0[0], &arg_continue_short[0], &arg_path[0], &arg_continue_long[0],
         &arg_target[0], &arg_target_short[0], &arg_target_val[0], nullptr
     };
     ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
     EXPECT_EQ(expected_path, ap["path"]);
-    EXPECT_EQ(ArgumentParser::trueString, ap["continue"]);
+    EXPECT_EQ(expected_continue, ap["continue"]);
     EXPECT_EQ(expected_target, ap["target"]);
 }
 
