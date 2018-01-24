@@ -39,7 +39,7 @@ const option ArgumentParser::options[] =
     { 0, 0, 0, 0},
 };
 
-ArgumentParser::ArgumentParser(int argc, char** argv)
+ArgumentParser::ArgumentParser(int argc, char * const argv[])
 {
     int option = 0;
     while (-1 != (option = getopt_long(argc, argv, optionStr, options, nullptr)))
@@ -76,7 +76,7 @@ const std::string& ArgumentParser::operator[](const std::string& opt)
     }
 }
 
-void ArgumentParser::usage(char** argv)
+void ArgumentParser::usage(char * const argv[])
 {
     std::cerr << "Usage: " << argv[0] << " options\n";
     std::cerr << "Options:\n";

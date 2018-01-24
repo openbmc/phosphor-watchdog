@@ -4,7 +4,8 @@ AM_CPPFLAGS = -I$(top_srcdir)
 TESTS = $(check_PROGRAMS)
 
 # Build/add utest to test suite
-check_PROGRAMS = timer_test \
+check_PROGRAMS = argument_test \
+				 timer_test \
                  watchdog_test
 
 utestCPPFLAGS = -Igtest \
@@ -23,6 +24,10 @@ utestLDFLAGS = -lgtest_main -lgtest \
                 $(PHOSPHOR_LOGGING_LIBS) \
                 $(PHOSPHOR_DBUS_INTERFACES_LIBS)
 
+argument_test_CPPFLAGS = ${utestCPPFLAGS}
+argument_test_CXXFLAGS = ${utestCXXFLAGS}
+argument_test_LDFLAGS = ${utestLDFLAGS}
+
 timer_test_CPPFLAGS = ${utestCPPFLAGS}
 timer_test_CXXFLAGS = ${utestCXXFLAGS}
 timer_test_LDFLAGS = ${utestLDFLAGS}
@@ -31,8 +36,11 @@ watchdog_test_CPPFLAGS = ${utestCPPFLAGS}
 watchdog_test_CXXFLAGS = ${utestCXXFLAGS}
 watchdog_test_LDFLAGS = ${utestLDFLAGS}
 
+argument_test_SOURCES = argument_test.cpp
 timer_test_SOURCES = timer_test.cpp
 watchdog_test_SOURCES = watchdog_test.cpp
+
+argument_test_LDADD = $(top_builddir)/argument.o
 
 timer_test_LDADD =  $(top_builddir)/timer.o
 
