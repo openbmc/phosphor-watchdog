@@ -42,6 +42,8 @@ const option ArgumentParser::options[] =
 ArgumentParser::ArgumentParser(int argc, char** argv)
 {
     int option = 0;
+
+    optind = 1;
     while (-1 != (option = getopt_long(argc, argv, optionStr, options, nullptr)))
     {
         if ((option == '?') || (option == 'h'))
