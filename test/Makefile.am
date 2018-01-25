@@ -7,21 +7,20 @@ TESTS = $(check_PROGRAMS)
 check_PROGRAMS = timer_test \
                  watchdog_test
 
-utestCPPFLAGS = -Igtest \
-                 $(GTEST_CPPFLAGS) \
-                 $(AM_CPPFLAGS) \
-                 $(SDBUSPLUS_CFLAGS) \
-                 $(PHOSPHOR_LOGGING_CFLAGS) \
-                 $(PHOSPHOR_DBUS_INTERFACES_CFLAGS)
+utestCPPFLAGS = $(GTEST_MAIN_CFLAGS) \
+                $(AM_CPPFLAGS) \
+                $(SDBUSPLUS_CFLAGS) \
+                $(PHOSPHOR_LOGGING_CFLAGS) \
+                $(PHOSPHOR_DBUS_INTERFACES_CFLAGS)
 
 utestCXXFLAGS = $(PTHREAD_CFLAGS)
 
-utestLDFLAGS = -lgtest_main -lgtest \
-                $(PTHREAD_LIBS) \
-                $(OESDK_TESTCASE_FLAGS) \
-                $(SDBUSPLUS_LIBS) \
-                $(PHOSPHOR_LOGGING_LIBS) \
-                $(PHOSPHOR_DBUS_INTERFACES_LIBS)
+utestLDFLAGS = $(GTEST_MAIN_LIBS) \
+               $(PTHREAD_LIBS) \
+               $(OESDK_TESTCASE_FLAGS) \
+               $(SDBUSPLUS_LIBS) \
+               $(PHOSPHOR_LOGGING_LIBS) \
+               $(PHOSPHOR_DBUS_INTERFACES_LIBS)
 
 timer_test_CPPFLAGS = ${utestCPPFLAGS}
 timer_test_CXXFLAGS = ${utestCXXFLAGS}
