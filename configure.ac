@@ -23,10 +23,18 @@ PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 221], [], [AC_MSG_ERROR(["systemd re
 PKG_CHECK_MODULES([PHOSPHOR_LOGGING], [phosphor-logging],, [AC_MSG_ERROR([Could not find phosphor-logging...openbmc/phosphor-logging package required])])
 PKG_CHECK_MODULES([SDBUSPLUS], [sdbusplus],, [AC_MSG_ERROR([Could not find sdbusplus...openbmc/sdbusplus package required])])
 PKG_CHECK_MODULES([PHOSPHOR_DBUS_INTERFACES], [phosphor-dbus-interfaces],, [AC_MSG_ERROR([Could not find phosphor-dbus-interfaces...openbmc/phosphor-dbus-interfaces package required])])
+PKG_CHECK_MODULES([GTEST_MAIN], [gtest_main], [], [])
 
 # Check/set gtest specific functions.
-AX_PTHREAD([GTEST_CPPFLAGS="-DGTEST_HAS_PTHREAD=1"],[GTEST_CPPFLAGS="-DGTEST_HAS_PTHREAD=0"])
-AC_SUBST(GTEST_CPPFLAGS)
+AS_IF([test "x$GTEST_MAIN_CFLAGS" == "x"],
+    [
+        AX_PTHREAD([GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=1"],[GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=0"])
+        [GTEST_MAIN_LIBS="-lgtest_main -lgtest"]
+        AC_SUBST(GTEST_MAIN_CFLAGS)
+        AC_SUBST(GTEST_MAIN_LIBS)
+    ]
+)
+
 AC_ARG_ENABLE([oe-sdk],
     AS_HELP_STRING([--enable-oe-sdk], [Link testcases absolutely against OE SDK so they can be ran within it.])
 )
