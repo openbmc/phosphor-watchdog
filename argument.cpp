@@ -28,7 +28,7 @@ using namespace std::string_literals;
 const std::string ArgumentParser::trueString = "true"s;
 const std::string ArgumentParser::emptyString = ""s;
 
-const char* ArgumentParser::optionStr = "p:s:t:c:?h";
+const char* ArgumentParser::optionStr = "p:s:t:ch";
 const option ArgumentParser::options[] =
 {
     { "path",     required_argument,  nullptr,   'o' },
