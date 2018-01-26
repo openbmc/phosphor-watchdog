@@ -65,7 +65,7 @@ ArgumentParser::ArgumentParser(int argc, char** argv)
 
         if (i->val)
         {
-            arguments[i->name] = (i->has_arg ? optarg : trueString);
+            arguments[i->name] = (optarg ? optarg : trueString);
         }
     }
 }
