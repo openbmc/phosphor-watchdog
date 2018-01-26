@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS = -I m4
+
 sbin_PROGRAMS = phosphor-watchdog
 
 noinst_HEADERS = timer.hpp \
