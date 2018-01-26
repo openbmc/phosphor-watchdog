@@ -31,7 +31,7 @@ const std::string ArgumentParser::emptyString = ""s;
 const char* ArgumentParser::optionStr = "p:s:t:c:?h";
 const option ArgumentParser::options[] =
 {
-    { "path",     required_argument,  nullptr,   'o' },
+    { "path",     required_argument,  nullptr,   'p' },
     { "service",  required_argument,  nullptr,   's' },
     { "target",   required_argument,  nullptr,   't' },
     { "continue", no_argument,        nullptr,   'c' },
