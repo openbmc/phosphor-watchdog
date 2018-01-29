@@ -27,7 +27,7 @@ class ArgumentParser
          *  @param argv - the main function's argv passed as is
          *  @return Object constructed
          */
-        ArgumentParser(int argc, char** argv);
+        ArgumentParser(int argc, char * const argv[]);
 
         /** @brief Given an option, returns its argument(optarg)
          *
@@ -41,7 +41,7 @@ class ArgumentParser
          *
          *  @param argv - the main function's argv passed as is
          */
-        static void usage(char** argv);
+        static void usage(char * const argv[]);
 
         /** @brief Set to 'true' when an option is passed */
         static const std::string trueString;
