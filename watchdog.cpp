@@ -100,18 +100,27 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
 // Optional callback function on timer expiration
 void Watchdog::timeOutHandler()
 {
-    if (!target.empty())
-    {
-        auto method = bus.new_method_call(SYSTEMD_SERVICE,
-                                          SYSTEMD_ROOT,
-                                          SYSTEMD_INTERFACE,
-                                          "StartUnit");
-        method.append(target);
-        method.append("replace");
+    auto action = expireAction();
+    auto target = action_targets.find(action);
 
-        bus.call_noreply(method);
+    if (target == action_targets.end())
+    {
+        log<level::INFO>("watchdog: Timed out with no target",
+                entry("ACTION=%s", convertForMessage(action).c_str()));
+        return;
     }
-    return;
+
+    auto method = bus.new_method_call(SYSTEMD_SERVICE,
+            SYSTEMD_ROOT,
+            SYSTEMD_INTERFACE,
+            "StartUnit");
+    method.append(target->second);
+    method.append("replace");
+
+    log<level::INFO>("watchdog: Timed out",
+            entry("ACTION=%s", convertForMessage(action).c_str()),
+            entry("TARGET=%s", target->second.c_str()));
+    bus.call_noreply(method);
 }
 
 } // namespace watchdog
