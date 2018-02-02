@@ -22,9 +22,12 @@
 #include "argument.hpp"
 #include "watchdog.hpp"
 
+using phosphor::watchdog::ArgumentParser;
+using phosphor::watchdog::Watchdog;
+
 static void exitWithError(const char* err, char** argv)
 {
-    phosphor::watchdog::ArgumentParser::usage(argv);
+    ArgumentParser::usage(argv);
     std::cerr << "ERROR: " << err << "\n";
     exit(EXIT_FAILURE);
 }
@@ -35,7 +38,7 @@ int main(int argc, char** argv)
     using InternalFailure = sdbusplus::xyz::openbmc_project::Common::
                                 Error::InternalFailure;
     // Read arguments.
-    auto options = phosphor::watchdog::ArgumentParser(argc, argv);
+    auto options = ArgumentParser(argc, argv);
 
     // Parse out continue argument.
     auto continueParam = (options)["continue"];
@@ -78,7 +81,13 @@ int main(int argc, char** argv)
     {
         exitWithError("Multiple targets specified.", argv);
     }
-    auto target = targetParam.back();
+    std::map<Watchdog::Action, std::string> actionTargets;
+    if (!targetParam.empty()) {
+        auto target = targetParam.back();
+        actionTargets[Watchdog::Action::HardReset] = target;
+        actionTargets[Watchdog::Action::PowerOff] = target;
+        actionTargets[Watchdog::Action::PowerCycle] = target;
+    }
 
     sd_event* event = nullptr;
     auto r = sd_event_default(&event);
@@ -102,8 +111,7 @@ int main(int argc, char** argv)
     try
     {
         // Create a watchdog object
-        phosphor::watchdog::Watchdog watchdog(bus, path.c_str(),
-                                              eventP, std::move(target));
+        Watchdog watchdog(bus, path.c_str(), eventP, std::move(actionTargets));
         // Claim the bus
         bus.request_name(service.c_str());
 
