@@ -18,18 +18,32 @@
 #include <phosphor-logging/log.hpp>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/elog-errors.hpp>
+#include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
 #include "argument.hpp"
 #include "watchdog.hpp"
 
 using phosphor::watchdog::ArgumentParser;
 using phosphor::watchdog::Watchdog;
+using sdbusplus::xyz::openbmc_project::State::server::convertForMessage;
 
 static void exitWithError(const char* err, char** argv)
 {
     ArgumentParser::usage(argv);
     std::cerr << "ERROR: " << err << "\n";
     exit(EXIT_FAILURE);
+}
+
+void printActionTargets(
+        const std::map<Watchdog::Action, std::string>& actionTargets)
+{
+    std::cerr << "Action Targets:\n";
+    for (const auto& actionTarget : actionTargets)
+    {
+        std::cerr << "  " << convertForMessage(actionTarget.first) << " -> " <<
+            actionTarget.second << "\n";
+    }
+    std::cerr << std::flush;
 }
 
 int main(int argc, char** argv)
@@ -88,6 +102,8 @@ int main(int argc, char** argv)
         actionTargets[Watchdog::Action::PowerOff] = target;
         actionTargets[Watchdog::Action::PowerCycle] = target;
     }
+
+    printActionTargets(actionTargets);
 
     sd_event* event = nullptr;
     auto r = sd_event_default(&event);
