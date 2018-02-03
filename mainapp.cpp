@@ -103,6 +103,34 @@ int main(int argc, char** argv)
         action_targets[Watchdog::Action::PowerCycle] = target;
     }
 
+    // Parse out the action_target arguments. We allow one target to map
+    // to an action. These targets can replace the target specified above.
+    for (const auto &actionTarget : (options)["action_target"])
+    {
+        size_t key_value_split = actionTarget.find("=");
+        if (key_value_split == std::string::npos)
+        {
+            exitWithError(
+                    "Invalid action_target format, expect <action>=<target>.",
+                    argv);
+        }
+
+        const std::string key = actionTarget.substr(0, key_value_split);
+        const std::string value = actionTarget.substr(key_value_split+1);
+
+        // Convert an action from a fully namespaced value
+        Watchdog::Action action;
+        try
+        {
+            action = Watchdog::convertActionFromString(key);
+        }
+        catch (const sdbusplus::exception::InvalidEnumString &)
+        {
+            exitWithError("Bad action specified.", argv);
+        }
+
+        action_targets[action] = value;
+    }
     print_action_targets(action_targets);
 
     sd_event* event = nullptr;
