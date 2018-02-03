@@ -35,13 +35,6 @@ watchdog_test_CPPFLAGS = ${utestCPPFLAGS}
 watchdog_test_CXXFLAGS = ${utestCXXFLAGS}
 watchdog_test_LDFLAGS = ${utestLDFLAGS}
 
-argument_test_SOURCES = argument_test.cpp
-timer_test_SOURCES = timer_test.cpp
-watchdog_test_SOURCES = watchdog_test.cpp
-
-argument_test_LDADD = $(top_builddir)/argument.o
-
-timer_test_LDADD =  $(top_builddir)/timer.o
-
-watchdog_test_LDADD = $(top_builddir)/watchdog.o \
-                      $(top_builddir)/timer.o
+argument_test_SOURCES = ../argument.cpp argument_test.cpp
+timer_test_SOURCES = ../timer.cpp timer_test.cpp
+watchdog_test_SOURCES = ../timerc.cpp ../watchdog.cpp watchdog_test.cpp
