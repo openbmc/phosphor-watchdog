@@ -28,14 +28,15 @@ using namespace std::string_literals;
 const std::vector<std::string> emptyArg;
 const std::string ArgumentParser::trueString = "true"s;
 
-const char* ArgumentParser::optionStr = "p:s:t:ch";
+const char* ArgumentParser::optionStr = "p:s:t:a:ch";
 const option ArgumentParser::options[] =
 {
-    { "path",     required_argument,  nullptr,   'p' },
-    { "service",  required_argument,  nullptr,   's' },
-    { "target",   required_argument,  nullptr,   't' },
-    { "continue", no_argument,        nullptr,   'c' },
-    { "help",     no_argument,        nullptr,   'h' },
+    { "path",          required_argument,  nullptr,   'p' },
+    { "service",       required_argument,  nullptr,   's' },
+    { "target",        required_argument,  nullptr,   't' },
+    { "action_target", required_argument,  nullptr,   'a' },
+    { "continue",      no_argument,        nullptr,   'c' },
+    { "help",          no_argument,        nullptr,   'h' },
     { 0, 0, 0, 0},
 };
 
