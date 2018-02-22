@@ -91,18 +91,18 @@ void ArgumentParser::usage(char * const argv[])
     std::cerr << "Usage: " << argv[0] << " options\n";
     std::cerr << "Options:\n";
     std::cerr << " --help                           Print this menu\n";
-    std::cerr << " --path=<Dbus Object path>        Dbus Object path."
-                     " Ex: /xyz/openbmc_project/state/watchdog/host0\n";
-    std::cerr << " --service=<Dbus Service name>    Dbus Service name."
-                     " Ex: xyz.openbmc_project.State.Watchdog.Host\n";
-    std::cerr << " [--target=<systemd unit>]        Systemd unit to be called"
-                     " on timeout for all actions but NONE. Deprecated, use"
+    std::cerr << " --path=<Dbus Object path>        Dbus Object path. "
+                     "Ex: /xyz/openbmc_project/state/watchdog/host0\n";
+    std::cerr << " --service=<Dbus Service name>    Dbus Service name. "
+                     "Ex: xyz.openbmc_project.State.Watchdog.Host\n";
+    std::cerr << " [--target=<systemd unit>]        Systemd unit to be called "
+                     "on timeout for all actions but NONE. Deprecated, use "
                      "--action_target instead.\n";
-    std::cerr << " [--action_target=<action>=<systemd unit>] Map of action to"
-                     "systemd unit to be called on timeout if that action is"
+    std::cerr << " [--action_target=<action>=<systemd unit>] Map of action to "
+                     "systemd unit to be called on timeout if that action is "
                      "set for ExpireAction when the timer expires.\n";
-    std::cerr << " [--continue]                     Continue daemon after"
-                     " watchdog timeout.\n";
+    std::cerr << " [--continue]                     Continue daemon after "
+                     "watchdog timeout.\n";
 }
 } // namespace watchdog
 } // namespace phosphor
