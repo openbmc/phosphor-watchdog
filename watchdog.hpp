@@ -1,8 +1,10 @@
 #pragma once
 
 #include <systemd/sd-event.h>
+#include <experimental/optional>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/server/object.hpp>
+#include <tuple>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
 #include "timer.hpp"
 namespace phosphor
@@ -37,18 +39,25 @@ class Watchdog : public WatchdogInherits
          *  @param[in] objPath        - Object path to attach to.
          *  @param[in] event          - reference to sd_event unique pointer
          *  @param[in] actionTargets  - map of systemd targets called on timeout
+         *  @param[in] fallback
          */
         Watchdog(sdbusplus::bus::bus& bus,
                 const char* objPath,
                 EventPtr& event,
                 std::map<Action, TargetName>&& actionTargets =
-                    std::map<Action, TargetName>()) :
+                    std::map<Action, TargetName>(),
+                std::experimental::optional<std::tuple<Action, uint64_t>>&&
+                    fallback = std::experimental::nullopt) :
             WatchdogInherits(bus, objPath),
             bus(bus),
             actionTargets(std::move(actionTargets)),
+            fallback(std::move(fallback)),
             timer(event, std::bind(&Watchdog::timeOutHandler, this))
         {
-            // Nothing
+            // We need to poke the enable mechanism to make sure that the timer
+            // enters the fallback state when the object is created if a fallback
+            // is provided.
+            enabled(false);
         }
 
         /** @brief Since we are overriding the setter-enabled but not the
@@ -99,6 +108,9 @@ class Watchdog : public WatchdogInherits
 
         /** @brief Map of systemd units to be started when the timer expires */
         std::map<Action, TargetName> actionTargets;
+
+        /** @brief Fallback timer options */
+        std::experimental::optional<std::tuple<Action, uint64_t>> fallback;
 
         /** @brief Contained timer object */
         Timer timer;

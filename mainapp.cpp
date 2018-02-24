@@ -15,10 +15,12 @@
  */
 
 #include <iostream>
+#include <experimental/optional>
 #include <phosphor-logging/log.hpp>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/elog-errors.hpp>
 #include <string>
+#include <tuple>
 #include <xyz/openbmc_project/Common/error.hpp>
 #include "argument.hpp"
 #include "watchdog.hpp"
@@ -133,6 +135,45 @@ int main(int argc, char** argv)
     }
     printActionTargets(actionTargets);
 
+    // Parse out the fallback settings for the watchdog. Note that we require
+    // both of the fallback arguments to do anything here, but having a fallback
+    // is entirely optional.
+    auto fallbackActionParam = (options)["fallback_action"];
+    auto fallbackIntervalParam = (options)["fallback_interval"];
+    if (fallbackActionParam.empty() ^ fallbackIntervalParam.empty())
+    {
+        exitWithError("Only one of the fallback options was specified.", argv);
+    }
+    if (fallbackActionParam.size() > 1 || fallbackIntervalParam.size() > 1)
+    {
+        exitWithError("Multiple fallbacks specified.", argv);
+    }
+    std::experimental::optional<std::tuple<Watchdog::Action, uint64_t>>
+        fallback;
+    if (!fallbackActionParam.empty())
+    {
+        Watchdog::Action action;
+        try
+        {
+            action = Watchdog::convertActionFromString(
+                    fallbackActionParam.back());
+        }
+        catch (const sdbusplus::exception::InvalidEnumString &)
+        {
+            exitWithError("Bad action specified.", argv);
+        }
+        uint64_t interval;
+        try
+        {
+            interval = std::stoull(fallbackIntervalParam.back());
+        }
+        catch (const std::logic_error &)
+        {
+            exitWithError("Failed to convert fallback interval to integer", argv);
+        }
+        fallback = std::make_tuple(action, interval);
+    }
+
     sd_event* event = nullptr;
     auto r = sd_event_default(&event);
     if (r < 0)
@@ -155,7 +196,9 @@ int main(int argc, char** argv)
     try
     {
         // Create a watchdog object
-        Watchdog watchdog(bus, path.c_str(), eventP, std::move(actionTargets));
+        Watchdog watchdog(bus, path.c_str(), eventP, std::move(actionTargets),
+            std::move(fallback));
+
         // Claim the bus
         bus.request_name(service.c_str());
 
