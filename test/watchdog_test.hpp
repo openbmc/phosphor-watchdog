@@ -21,7 +21,7 @@ class WdogTest : public TimerTest
             EXPECT_GE(rc, 0);
 
             // Initially the watchdog would be disabled
-            EXPECT_EQ(false, wdog.enabled());
+            EXPECT_FALSE(wdog.enabled());
         }
 
         //sdbusplus handle

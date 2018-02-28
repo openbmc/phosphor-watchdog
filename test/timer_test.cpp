@@ -30,11 +30,11 @@ TEST_F(TimerTest, testTimerForExpirationDefaultTimeoutHandler)
             count++;
         }
     }
-    EXPECT_EQ(true, timer.expired());
+    EXPECT_TRUE(timer.expired());
     EXPECT_EQ(expireTime.count() - 1, count);
 
     // Make sure secondary callback was not called.
-    EXPECT_EQ(false, expired);
+    EXPECT_FALSE(expired);
 }
 
 /** @brief Starts the timer and expects it to expire
@@ -64,9 +64,9 @@ TEST_F(TimerTest, testTimerForExpirationSecondCallBack)
             count++;
         }
     }
-    EXPECT_EQ(true, timer.expired());
+    EXPECT_TRUE(timer.expired());
     EXPECT_EQ(expireTime.count() - 1, count);
 
     // This gets set as part of secondary callback
-    EXPECT_EQ(true, expired);
+    EXPECT_TRUE(expired);
 }
