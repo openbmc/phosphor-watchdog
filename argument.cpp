@@ -28,15 +28,17 @@ using namespace std::string_literals;
 const std::vector<std::string> emptyArg;
 const std::string ArgumentParser::trueString = "true"s;
 
-const char* ArgumentParser::optionStr = "p:s:t:a:ch";
+const char* ArgumentParser::optionStr = "p:s:t:a:f:i:ch";
 const option ArgumentParser::options[] =
 {
-    { "path",          required_argument,  nullptr,   'p' },
-    { "service",       required_argument,  nullptr,   's' },
-    { "target",        required_argument,  nullptr,   't' },
-    { "action_target", required_argument,  nullptr,   'a' },
-    { "continue",      no_argument,        nullptr,   'c' },
-    { "help",          no_argument,        nullptr,   'h' },
+    { "path",                    required_argument,  nullptr,   'p' },
+    { "service",                 required_argument,  nullptr,   's' },
+    { "target",                  required_argument,  nullptr,   't' },
+    { "action_target",           required_argument,  nullptr,   'a' },
+    { "fallback_action",         required_argument,  nullptr,   'f' },
+    { "fallback_interval",       required_argument,  nullptr,   'i' },
+    { "continue",                no_argument,        nullptr,   'c' },
+    { "help",                    no_argument,        nullptr,   'h' },
     { 0, 0, 0, 0},
 };
 
@@ -102,6 +104,13 @@ void ArgumentParser::usage(char * const argv[])
     std::cerr << " [--action_target=<action>=<systemd unit>] Map of action to "
                      "systemd unit to be called on timeout if that action is "
                      "set for ExpireAction when the timer expires.\n";
+    std::cerr << " [--fallback_action=<action>]              Enables the "
+                     "watchdog even when disabled via the dbus interface. "
+                     "Perform this action when the fallback expires.\n";
+    std::cerr << " [--fallback_interval=<interval in ms>]    Enables the "
+                     "watchdog even when disabled via the dbus interface. "
+                     "Waits for this interval before performing the fallback "
+                     "action.\n";
     std::cerr << " [--continue]                              Continue daemon "
                      "after watchdog timeout.\n";
 }
