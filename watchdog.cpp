@@ -17,29 +17,29 @@ constexpr auto SYSTEMD_INTERFACE  = "org.freedesktop.systemd1.Manager";
 // Enable or disable watchdog
 bool Watchdog::enabled(bool value)
 {
-    if (this->enabled() != value)
+    if (!value)
     {
-        if (value)
-        {
-            // Start ONESHOT timer. Timer handles all in usec
-            auto usec = duration_cast<microseconds>(
-                                      milliseconds(this->interval()));
-            // Update new expiration
-            timer.start(usec);
+        // Attempt to disable our timer if needed
+        tryDisable();
 
-            // Enable timer
-            timer.setEnabled<std::true_type>();
-
-            log<level::INFO>("watchdog: enabled and started",
-                             entry("INTERVAL=%llu", this->interval()));
-        }
-        else
-        {
-            timer.setEnabled<std::false_type>();
-            timer.clearExpired();
-            log<level::INFO>("watchdog: disabled");
-        }
+        return false;
     }
+    else if (!this->enabled())
+    {
+        // Start ONESHOT timer. Timer handles all in usec
+        auto usec = duration_cast<microseconds>(
+                milliseconds(this->interval()));
+
+        // Update new expiration
+        timer.start(usec);
+
+        // Enable timer
+        timer.setEnabled<std::true_type>();
+
+        log<level::INFO>("watchdog: enabled and started",
+                entry("INTERVAL=%llu", this->interval()));
+    }
+
     return WatchdogInherits::enabled(value);
 }
 
@@ -96,20 +96,38 @@ void Watchdog::timeOutHandler()
     {
         log<level::INFO>("watchdog: Timed out with no target",
                 entry("ACTION=%s", convertForMessage(action).c_str()));
-        return;
+    }
+    else
+    {
+        auto method = bus.new_method_call(SYSTEMD_SERVICE,
+                SYSTEMD_ROOT,
+                SYSTEMD_INTERFACE,
+                "StartUnit");
+        method.append(target->second);
+        method.append("replace");
+
+        log<level::INFO>("watchdog: Timed out",
+                entry("ACTION=%s", convertForMessage(action).c_str()),
+                entry("TARGET=%s", target->second.c_str()));
+        bus.call_noreply(method);
     }
 
-    auto method = bus.new_method_call(SYSTEMD_SERVICE,
-            SYSTEMD_ROOT,
-            SYSTEMD_INTERFACE,
-            "StartUnit");
-    method.append(target->second);
-    method.append("replace");
+    tryDisable();
+}
 
-    log<level::INFO>("watchdog: Timed out",
-            entry("ACTION=%s", convertForMessage(action).c_str()),
-            entry("TARGET=%s", target->second.c_str()));
-    bus.call_noreply(method);
+void Watchdog::tryDisable()
+{
+    if (timer.getEnabled() != SD_EVENT_OFF)
+    {
+        timer.setEnabled<std::false_type>();
+        timer.clearExpired();
+
+        log<level::INFO>("watchdog: disabled");
+    }
+
+    // Make sure we accurately reflect our enabled state to the
+    // dbus interface.
+    WatchdogInherits::enabled(false);
 }
 
 } // namespace watchdog
