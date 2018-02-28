@@ -5,17 +5,17 @@ using namespace phosphor::watchdog;
 /** @brief Make sure that watchdog is started and not enabled */
 TEST_F(WdogTest, createWdogAndDontEnable)
 {
-    EXPECT_EQ(false, wdog.enabled());
+    EXPECT_FALSE(wdog.enabled());
     EXPECT_EQ(0, wdog.timeRemaining());
-    EXPECT_EQ(false, wdog.timerExpired());
+    EXPECT_FALSE(wdog.timerExpired());
 }
 
 /** @brief Make sure that watchdog is started and enabled */
 TEST_F(WdogTest, createWdogAndEnable)
 {
     // Enable and then verify
-    EXPECT_EQ(true, wdog.enabled(true));
-    EXPECT_EQ(false, wdog.timerExpired());
+    EXPECT_TRUE(wdog.enabled(true));
+    EXPECT_FALSE(wdog.timerExpired());
 
     // Get the configured interval
     auto remaining = milliseconds(wdog.timeRemaining());
@@ -25,7 +25,7 @@ TEST_F(WdogTest, createWdogAndEnable)
     EXPECT_TRUE((remaining >= defaultInterval - defaultDrift) &&
                 (remaining <= defaultInterval));
 
-    EXPECT_EQ(false, wdog.timerExpired());
+    EXPECT_FALSE(wdog.timerExpired());
 }
 
 /** @brief Make sure that watchdog is started and enabled.
@@ -34,11 +34,11 @@ TEST_F(WdogTest, createWdogAndEnable)
 TEST_F(WdogTest, createWdogAndEnableThenDisable)
 {
     // Enable and then verify
-    EXPECT_EQ(true, wdog.enabled(true));
+    EXPECT_TRUE(wdog.enabled(true));
 
     // Disable and then verify
-    EXPECT_EQ(false, wdog.enabled(false));
-    EXPECT_EQ(false, wdog.enabled());
+    EXPECT_FALSE(wdog.enabled(false));
+    EXPECT_FALSE(wdog.enabled());
     EXPECT_EQ(0, wdog.timeRemaining());
 }
 
@@ -49,7 +49,7 @@ TEST_F(WdogTest, createWdogAndEnableThenDisable)
 TEST_F(WdogTest, enableWdogAndWait5Seconds)
 {
     // Enable and then verify
-    EXPECT_EQ(true, wdog.enabled(true));
+    EXPECT_TRUE(wdog.enabled(true));
 
     // Sleep for 5 seconds
     auto sleepTime = seconds(5s);
@@ -64,7 +64,7 @@ TEST_F(WdogTest, enableWdogAndWait5Seconds)
     // how we get scheduled. So checking a range here.
     EXPECT_TRUE((remaining >= expected - defaultDrift) &&
                 (remaining <= expected));
-    EXPECT_EQ(false, wdog.timerExpired());
+    EXPECT_FALSE(wdog.timerExpired());
 }
 
 /** @brief Make sure that watchdog is started and enabled.
@@ -74,7 +74,7 @@ TEST_F(WdogTest, enableWdogAndWait5Seconds)
 TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
 {
     // Enable and then verify
-    EXPECT_EQ(true, wdog.enabled(true));
+    EXPECT_TRUE(wdog.enabled(true));
 
     // Sleep for 1 second
     std::this_thread::sleep_for(1s);
@@ -95,11 +95,11 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
             count++;
         }
     }
-    EXPECT_EQ(true, wdog.timerExpired());
+    EXPECT_TRUE(wdog.timerExpired());
     EXPECT_EQ(expireTime.count() - 1 , count);
 
     // Make sure secondary callback was not called.
-    EXPECT_EQ(false, expired);
+    EXPECT_FALSE(expired);
 }
 
 /** @brief Make sure the Interval can be updated directly.
@@ -120,7 +120,7 @@ TEST_F(WdogTest, verifyIntervalUpdateReceived)
 TEST_F(WdogTest, enableWdogAndWaitTillEnd)
 {
     // Enable and then verify
-    EXPECT_EQ(true, wdog.enabled(true));
+    EXPECT_TRUE(wdog.enabled(true));
     auto expireTime = duration_cast<seconds>(
                         milliseconds(defaultInterval));
 
@@ -135,8 +135,8 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
             count++;
         }
     }
-    EXPECT_EQ(true, wdog.enabled());
+    EXPECT_TRUE(wdog.enabled());
     EXPECT_EQ(0, wdog.timeRemaining());
-    EXPECT_EQ(true, wdog.timerExpired());
+    EXPECT_TRUE(wdog.timerExpired());
     EXPECT_EQ(expireTime.count() - 1, count);
 }
