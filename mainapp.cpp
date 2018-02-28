@@ -159,8 +159,8 @@ int main(int argc, char** argv)
         // Claim the bus
         bus.request_name(service.c_str());
 
-        // Loop forever processing events
-        while (true)
+        // Loop until our timer expires and we don't want to continue
+        while (continueAfterTimeout || !watchdog.timerExpired())
         {
             // -1 denotes wait for ever
             r = sd_event_run(eventP.get(), (uint64_t)-1);
@@ -168,23 +168,6 @@ int main(int argc, char** argv)
             {
                 log<level::ERR>("Error waiting for events");
                 elog<InternalFailure>();
-            }
-
-            // The timer expiring is an event that breaks from the above.
-            if (watchdog.timerExpired())
-            {
-                // Either disable the timer or exit.
-                if (continueAfterTimeout)
-                {
-                    // The watchdog will be disabled but left running to be
-                    // re-enabled.
-                    watchdog.enabled(false);
-                }
-                else
-                {
-                    // The watchdog daemon will now exit.
-                    break;
-                }
             }
         }
     }
