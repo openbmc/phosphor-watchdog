@@ -133,7 +133,7 @@ void Watchdog::tryFallbackOrDisable()
 {
     // We only re-arm the watchdog if we were already enabled and have
     // a possible fallback
-    if (fallback && this->enabled())
+    if (fallback && (fallback->always_enabled || this->enabled()))
     {
         auto interval_ms = fallback->interval;
         auto interval_us = duration_cast<microseconds>(milliseconds(interval_ms));
