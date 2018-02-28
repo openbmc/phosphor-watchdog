@@ -19,8 +19,12 @@ bool Watchdog::enabled(bool value)
 {
     if (!value)
     {
-        // Attempt to disable our timer if needed
-        tryDisable();
+        // Make sure we accurately reflect our enabled state to the
+        // tryFallbackOrDisable() call
+        WatchdogInherits::enabled(value);
+
+        // Attempt to fallback or disable our timer if needed
+        tryFallbackOrDisable();
 
         return false;
     }
@@ -78,6 +82,13 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
         return 0;
     }
 
+    if (!this->enabled())
+    {
+        // Having a timer but not displaying an enabled value means we
+        // are inside of the fallback
+        value = fallback->interval;
+    }
+
     // Update new expiration
     auto usec = duration_cast<microseconds>(milliseconds(value));
     timer.start(usec);
@@ -89,9 +100,13 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
 // Optional callback function on timer expiration
 void Watchdog::timeOutHandler()
 {
-    auto action = expireAction();
-    auto target = actionTargets.find(action);
+    Action action = expireAction();
+    if (!this->enabled())
+    {
+        action = fallback->action;
+    }
 
+    auto target = actionTargets.find(action);
     if (target == actionTargets.end())
     {
         log<level::INFO>("watchdog: Timed out with no target",
@@ -112,12 +127,26 @@ void Watchdog::timeOutHandler()
         bus.call_noreply(method);
     }
 
-    tryDisable();
+    tryFallbackOrDisable();
 }
 
-void Watchdog::tryDisable()
+void Watchdog::tryFallbackOrDisable()
 {
-    if (timerEnabled())
+    // We only re-arm the watchdog if we were already enabled and have
+    // a possible fallback
+    if (fallback && this->enabled())
+    {
+        auto interval_ms = fallback->interval;
+        auto interval_us = duration_cast<microseconds>(milliseconds(interval_ms));
+
+        timer.clearExpired();
+        timer.start(interval_us);
+        timer.setEnabled<std::true_type>();
+
+        log<level::INFO>("watchdog: falling back",
+                entry("INTERVAL=%llu", interval_ms));
+    }
+    else if (timerEnabled())
     {
         timer.setEnabled<std::false_type>();
 
