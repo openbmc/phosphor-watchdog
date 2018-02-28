@@ -49,24 +49,21 @@ uint64_t Watchdog::timeRemaining() const
 {
     uint64_t timeRemain = 0;
 
-    if (this->enabled())
+    // timer may have already expired and disabled
+    if (timer.getEnabled() != SD_EVENT_OFF)
     {
-        // timer may have already expired and disabled
-        if (timer.getEnabled() != SD_EVENT_OFF)
-        {
-            // the one-shot timer does not expire yet
-            auto expiry = duration_cast<milliseconds>(
-                                   timer.getRemaining());
+        // the one-shot timer does not expire yet
+        auto expiry = duration_cast<milliseconds>(
+                timer.getRemaining());
 
-            // convert to msec per interface expectation.
-            auto timeNow = duration_cast<milliseconds>(
-                                    Timer::getCurrentTime());
+        // convert to msec per interface expectation.
+        auto timeNow = duration_cast<milliseconds>(
+                Timer::getCurrentTime());
 
-            // Its possible that timer may have expired by now.
-            // So need to cross verify.
-            timeRemain = (expiry > timeNow) ?
-                            (expiry - timeNow).count() : 0;
-        }
+        // Its possible that timer may have expired by now.
+        // So need to cross verify.
+        timeRemain = (expiry > timeNow) ?
+            (expiry - timeNow).count() : 0;
     }
     return timeRemain;
 }
