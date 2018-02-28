@@ -37,6 +37,7 @@ class Watchdog : public WatchdogInherits
         struct Fallback {
             Action action;
             uint64_t interval;
+            bool always;
         };
 
         /** @brief Constructs the Watchdog object
@@ -60,7 +61,9 @@ class Watchdog : public WatchdogInherits
             fallback(std::move(fallback)),
             timer(event, std::bind(&Watchdog::timeOutHandler, this))
         {
-            // Nothing
+            // We need to poke the enable mechanism to make sure that the timer
+            // enters the fallback state if the fallback is always enabled.
+            tryFallbackOrDisable();
         }
 
         /** @brief Since we are overriding the setter-enabled but not the

@@ -28,7 +28,7 @@ using namespace std::string_literals;
 const std::vector<std::string> emptyArg;
 const std::string ArgumentParser::trueString = "true"s;
 
-const char* ArgumentParser::optionStr = "p:s:t:a:f:i:ch";
+const char* ArgumentParser::optionStr = "p:s:t:a:f:i:ech";
 const option ArgumentParser::options[] =
 {
     { "path",                    required_argument,  nullptr,   'p' },
@@ -37,6 +37,7 @@ const option ArgumentParser::options[] =
     { "action_target",           required_argument,  nullptr,   'a' },
     { "fallback_action",         required_argument,  nullptr,   'f' },
     { "fallback_interval",       required_argument,  nullptr,   'i' },
+    { "fallback_always",         no_argument,        nullptr,   'e' },
     { "continue",                no_argument,        nullptr,   'c' },
     { "help",                    no_argument,        nullptr,   'h' },
     { 0, 0, 0, 0},
@@ -111,6 +112,9 @@ void ArgumentParser::usage(char * const argv[])
                      "watchdog even when disabled via the dbus interface. "
                      "Waits for this interval before performing the fallback "
                      "action.\n";
+    std::cerr << " [--fallback_always]                       Enables the "
+                     "watchdog even when disabled by the dbus interface. "
+                     "This option is only valid with a fallback specified.\n";
     std::cerr << " [--continue]                              Continue daemon "
                      "after watchdog timeout.\n";
 }
