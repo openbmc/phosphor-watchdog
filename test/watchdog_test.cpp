@@ -165,7 +165,7 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
     // Waiting default expiration
     EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
 
-    EXPECT_TRUE(wdog->enabled());
+    EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
