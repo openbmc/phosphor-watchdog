@@ -71,24 +71,19 @@ uint64_t Watchdog::timeRemaining() const
 // Reset the timer to a new expiration value
 uint64_t Watchdog::timeRemaining(uint64_t value)
 {
-    if (this->enabled())
+    uint64_t msec = value;
+    if (timer.getEnabled() == SD_EVENT_OFF)
     {
-        // Disable the timer
-        timer.setEnabled<std::false_type>();
-
-        // Timer handles all in microseconds and hence converting
-        auto usec = duration_cast<microseconds>(
-                                  milliseconds(value));
-        // Update new expiration
-        timer.start(usec);
-
-        // Enable the timer.
-        timer.setEnabled<std::true_type>();
-
-        // Update Base class data.
-        return WatchdogInherits::timeRemaining(value);
+        // We don't need to update the timer because it is off
+        return 0;
     }
-    return 0;
+
+    // Update new expiration
+    auto usec = duration_cast<microseconds>(milliseconds(msec));
+    timer.start(usec);
+
+    // Update Base class data.
+    return WatchdogInherits::timeRemaining(value);
 }
 
 // Optional callback function on timer expiration
