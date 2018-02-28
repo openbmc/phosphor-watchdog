@@ -172,7 +172,19 @@ int main(int argc, char** argv)
         fallback = Watchdog::Fallback{
             .action = action,
             .interval = interval,
+            .always = false,
         };
+    }
+
+    auto fallbackAlwaysParam = (options)["fallback_always"];
+    if (!fallbackAlwaysParam.empty())
+    {
+        if (!fallback)
+        {
+            exitWithError("Specified the fallback should always be enabled but "
+                    "no fallback provided.", argv);
+        }
+        fallback->always = true;
     }
 
     sd_event* event = nullptr;
