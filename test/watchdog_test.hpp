@@ -1,5 +1,6 @@
 #include <timer_test.hpp>
 #include <chrono>
+#include <memory>
 #include <watchdog.hpp>
 
 using namespace std::chrono;
@@ -12,7 +13,7 @@ class WdogTest : public TimerTest
         // Gets called as part of each TEST_F construction
         WdogTest()
             : bus(sdbusplus::bus::new_default()),
-              wdog(bus, TEST_PATH, eventP),
+              wdog(std::make_unique(bus, TEST_PATH, eventP)),
               defaultInterval(milliseconds(wdog.interval())),
               defaultDrift(30)
         {
@@ -28,7 +29,7 @@ class WdogTest : public TimerTest
         sdbusplus::bus::bus bus;
 
         // Watchdog object
-        phosphor::watchdog::Watchdog wdog;
+        std::unique_ptr<phosphor::watchdog::Watchdog> wdog;
 
         // This is the default interval as given in Interface definition
         milliseconds defaultInterval;
