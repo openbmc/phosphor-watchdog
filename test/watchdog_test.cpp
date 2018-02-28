@@ -261,6 +261,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     Watchdog::Fallback fallback{
         .action = Watchdog::Action::PowerOff,
         .interval = static_cast<uint64_t>(fallbackIntervalMs),
+        .always_enabled = false,
     };
     std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
@@ -297,5 +298,83 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     // We should have re-entered the primary
     EXPECT_TRUE(wdog->enabled());
     EXPECT_GE(primaryInterval, milliseconds(wdog->timeRemaining()));
+    EXPECT_TRUE(wdog->timerEnabled());
+}
+
+/** @brief Make sure the watchdog is started and with a fallback without
+ *         sending an enable
+ *         Then enable the watchdog
+ *         Wait through the initial trip and ensure the fallback is observed
+ *         Make sure that fallback runs to completion and ensure the watchdog
+ *         is in the fallback state again
+ */
+TEST_F(WdogTest, enableWdogWithFallbackAlways)
+{
+    auto primaryInterval = 5s;
+    auto primaryIntervalMs = milliseconds(primaryInterval).count();
+    auto fallbackInterval = primaryInterval * 2;
+    auto fallbackIntervalMs = milliseconds(fallbackInterval).count();
+
+    // We need to make a wdog with the right fallback options
+    // The interval is set to be noticeably different from the default
+    // so we can always tell the difference
+    Watchdog::Fallback fallback{
+        .action = Watchdog::Action::PowerOff,
+        .interval = static_cast<uint64_t>(fallbackIntervalMs),
+        .always_enabled = true,
+    };
+    std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
+                    std::move(emptyActionTargets), std::move(fallback));
+    EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
+    EXPECT_FALSE(wdog->enabled());
+    auto remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(fallbackInterval, remaining);
+    EXPECT_LT(primaryInterval, remaining);
+
+    // Enable and then verify
+    EXPECT_TRUE(wdog->enabled(true));
+    EXPECT_GE(primaryInterval, milliseconds(wdog->timeRemaining()));
+
+    // Waiting default expiration
+    auto waited = 0s;
+    while(waited < primaryInterval && wdog->enabled())
+    {
+        // Returns -0- on timeout and positive number on dispatch
+        auto sleepTime = 1s;
+        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        {
+            waited += sleepTime;
+        }
+    }
+    EXPECT_EQ(primaryInterval - 1s, waited);
+
+    // We should now have entered the fallback once the primary expires
+    EXPECT_FALSE(wdog->enabled());
+    remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(fallbackInterval, remaining);
+    EXPECT_LT(primaryInterval, remaining);
+    EXPECT_TRUE(wdog->timerEnabled());
+
+    // Waiting fallback expiration
+    waited = 0s;
+    while(waited < fallbackInterval &&
+          remaining >= milliseconds(wdog->timeRemaining()))
+    {
+        remaining = milliseconds(wdog->timeRemaining());
+
+        // Returns -0- on timeout and positive number on dispatch
+        auto sleepTime = 1s;
+        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        {
+            waited += sleepTime;
+        }
+    }
+    EXPECT_EQ(fallbackInterval - 1s, waited);
+
+    // We should now enter the fallback again
+    EXPECT_FALSE(wdog->enabled());
+    EXPECT_GE(fallbackInterval, remaining);
+    EXPECT_LT(primaryInterval, remaining);
     EXPECT_TRUE(wdog->timerEnabled());
 }
