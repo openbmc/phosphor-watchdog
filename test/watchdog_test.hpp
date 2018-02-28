@@ -38,7 +38,7 @@ class WdogTest : public TimerTest
         // has happened that remaining time was off by few msecs.
         milliseconds defaultDrift;
 
-    private:
+    protected:
         // Dummy name for object path
         // This is just to satisfy the constructor. Does not have
         // a need to check if the objects paths have been created.
