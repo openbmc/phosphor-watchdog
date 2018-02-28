@@ -105,6 +105,9 @@ class Watchdog : public WatchdogInherits
 
         /** @brief Optional Callback handler on timer expirartion */
         void timeOutHandler();
+
+        /** @brief Attempt to disable the watchdog if needed */
+        void tryDisable();
 };
 
 } // namespace watchdog

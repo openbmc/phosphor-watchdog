@@ -135,7 +135,8 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
             count++;
         }
     }
-    EXPECT_TRUE(wdog->enabled());
+
+    EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_EQ(expireTime.count() - 1, count);
