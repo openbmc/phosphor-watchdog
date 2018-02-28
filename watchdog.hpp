@@ -1,6 +1,7 @@
 #pragma once
 
 #include <systemd/sd-event.h>
+#include <experimental/optional>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/server/object.hpp>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
@@ -31,21 +32,32 @@ class Watchdog : public WatchdogInherits
          */
         using TargetName = std::string;
 
+        /** @brief Type used to specify the parameters of a fallback watchdog
+         */
+        struct Fallback {
+            Action action;
+            uint64_t interval;
+        };
+
         /** @brief Constructs the Watchdog object
          *
          *  @param[in] bus            - DBus bus to attach to.
          *  @param[in] objPath        - Object path to attach to.
          *  @param[in] event          - reference to sd_event unique pointer
          *  @param[in] actionTargets  - map of systemd targets called on timeout
+         *  @param[in] fallback
          */
         Watchdog(sdbusplus::bus::bus& bus,
                 const char* objPath,
                 EventPtr& event,
                 std::map<Action, TargetName>&& actionTargets =
-                    std::map<Action, TargetName>()) :
+                    std::map<Action, TargetName>(),
+                std::experimental::optional<Fallback>&&
+                    fallback = std::experimental::nullopt) :
             WatchdogInherits(bus, objPath),
             bus(bus),
             actionTargets(std::move(actionTargets)),
+            fallback(std::move(fallback)),
             timer(event, std::bind(&Watchdog::timeOutHandler, this))
         {
             // Nothing
@@ -106,14 +118,17 @@ class Watchdog : public WatchdogInherits
         /** @brief Map of systemd units to be started when the timer expires */
         std::map<Action, TargetName> actionTargets;
 
+        /** @brief Fallback timer options */
+        std::experimental::optional<Fallback> fallback;
+
         /** @brief Contained timer object */
         Timer timer;
 
         /** @brief Optional Callback handler on timer expirartion */
         void timeOutHandler();
 
-        /** @brief Attempt to disable the watchdog if needed */
-        void tryDisable();
+        /** @brief Attempt to enter the fallback watchdog or disables it */
+        void tryFallbackOrDisable();
 };
 
 } // namespace watchdog
