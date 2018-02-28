@@ -1,4 +1,8 @@
-#include <watchdog_test.hpp>
+#include <chrono>
+#include <memory>
+#include <utility>
+
+#include "watchdog_test.hpp"
 
 using namespace phosphor::watchdog;
 
@@ -140,4 +144,89 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_EQ(expireTime.count() - 1, count);
+}
+
+/** @brief Make sure the watchdog is started and enabled with a fallback
+ *         Wait through the initial trip and ensure the fallback is observed
+ */
+TEST_F(WdogTest, enableWdogWithFallback)
+{
+    // We need to make a wdog with the right fallback options
+    // The interval is set to be noticeably different from the default
+    // so we can always tell the difference
+    auto fallbackInterval = defaultInterval * 2;
+    Watchdog::Fallback fallback{
+        .action = Watchdog::Action::PowerOff,
+        .interval = static_cast<uint64_t>(fallbackInterval.count()),
+    };
+    std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
+                    std::move(emptyActionTargets), std::move(fallback));
+    EXPECT_FALSE(wdog->enabled());
+    EXPECT_EQ(0, wdog->timeRemaining());
+
+    // Enable and then verify
+    EXPECT_TRUE(wdog->enabled(true));
+
+    // Waiting default expiration
+    auto waited = 0s;
+    while(waited < defaultInterval && !wdog->timerExpired())
+    {
+        // Returns -0- on timeout and positive number on dispatch
+        auto sleepTime = 1s;
+        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        {
+            waited += sleepTime;
+        }
+    }
+    EXPECT_EQ(defaultInterval, waited);
+
+    // We should now have entered the fallback once the primary expires
+    EXPECT_FALSE(wdog->enabled());
+    auto remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(fallbackInterval, remaining);
+    EXPECT_LT(defaultInterval, remaining);
+    EXPECT_FALSE(wdog->timerExpired());
+
+    // We should still be ticking in fallback when setting action or interval
+    auto newInterval = defaultInterval - defaultDrift;
+    auto newIntervalMs = milliseconds(newInterval).count();
+    EXPECT_EQ(newInterval, milliseconds(wdog->interval(newIntervalMs)));
+    EXPECT_EQ(Watchdog::Action::None,
+            wdog->expireAction(Watchdog::Action::None));
+
+    EXPECT_FALSE(wdog->enabled());
+    EXPECT_GE(remaining, milliseconds(wdog->timeRemaining()));
+    EXPECT_LT(defaultInterval, milliseconds(wdog->timeRemaining()));
+    EXPECT_FALSE(wdog->timerExpired());
+
+
+    // Test that setting the timeRemaining always resets the timer to the
+    // fallback interval
+    EXPECT_EQ(fallback.interval, wdog->timeRemaining(defaultInterval.count()));
+    EXPECT_FALSE(wdog->enabled());
+
+    remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(fallbackInterval, remaining);
+    EXPECT_LE(fallbackInterval - defaultDrift, remaining);
+    EXPECT_FALSE(wdog->timerExpired());
+
+    // Waiting fallback expiration
+    waited = 0s;
+    while(waited < fallbackInterval && !wdog->timerExpired())
+    {
+        // Returns -0- on timeout and positive number on dispatch
+        auto sleepTime = 1s;
+        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        {
+            waited += sleepTime;
+        }
+    }
+    EXPECT_EQ(fallbackInterval, waited);
+
+    // We should now have disabled the watchdog after the fallback expires
+    EXPECT_FALSE(wdog->enabled());
+    EXPECT_EQ(0, wdog->timeRemaining());
+    EXPECT_TRUE(wdog->timerExpired());
+
 }
