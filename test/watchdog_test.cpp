@@ -32,6 +32,26 @@ TEST_F(WdogTest, createWdogAndDontEnable)
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
+
+    // We should be able to configure persistent properties
+    // while disabled
+    auto newAction = Watchdog::Action::Poweroff;
+    EXPECT_EQ(newAction, wdog->expireAction(newAction));
+    auto newIntervalMs = milliseconds(defaultInterval * 2).count();
+    EXPECT_EQ(newIntervalMs, wdog->interval(newIntervalMs));
+
+    EXPECT_EQ(newAction, wdog->expireAction());
+    EXPECT_EQ(newIntervalMs, wdog->interval());
+
+    // We won't be able to configure timeRemaining
+    EXPECT_EQ(0, wdog->timeRemaining(1000));
+    EXPECT_EQ(0, wdog->timeRemaining());
+
+    // Timer should not have become enabled
+    EXPECT_FALSE(wdog->enabled());
+    EXPECT_EQ(0, wdog->timeRemaining());
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_FALSE(wdog->timerEnabled());
 }
 
 /** @brief Make sure that watchdog is started and enabled */
@@ -114,19 +134,9 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     wdog->timeRemaining(newTime.count());
 
     // Waiting for expiration
-    int count = 0;
-    while(count < expireTime.count() && !wdog->timerExpired())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = duration_cast<microseconds>(seconds(1s));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
-        {
-            count++;
-        }
-    }
+    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
-    EXPECT_EQ(expireTime.count() - 1, count);
 
     // Make sure secondary callback was not called.
     EXPECT_FALSE(expired);
@@ -155,19 +165,10 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
                         milliseconds(defaultInterval));
 
     // Waiting default expiration
-    int count = 0;
-    while(count < expireTime.count() && !wdog->timerExpired())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = duration_cast<microseconds>(seconds(1s));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
-        {
-            count++;
-        }
-    }
-    EXPECT_TRUE(wdog->enabled());
+    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
+
+    EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
-    EXPECT_EQ(expireTime.count() - 1, count);
 }
