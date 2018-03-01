@@ -54,7 +54,7 @@ uint64_t Watchdog::timeRemaining() const
     uint64_t timeRemain = 0;
 
     // timer may have already expired and disabled
-    if (timer.getEnabled() != SD_EVENT_OFF)
+    if (timerEnabled())
     {
         // the one-shot timer does not expire yet
         auto expiry = duration_cast<milliseconds>(
@@ -75,7 +75,7 @@ uint64_t Watchdog::timeRemaining() const
 // Reset the timer to a new expiration value
 uint64_t Watchdog::timeRemaining(uint64_t value)
 {
-    if (timer.getEnabled() == SD_EVENT_OFF)
+    if (!timerEnabled())
     {
         // We don't need to update the timer because it is off
         return 0;
@@ -149,7 +149,7 @@ void Watchdog::tryFallbackOrDisable()
         log<level::INFO>("watchdog: falling back",
                 entry("INTERVAL=%llu", interval_ms));
     }
-    else if (timer.getEnabled() != SD_EVENT_OFF)
+    else if (timerEnabled() || timer.expired())
     {
         timer.setEnabled<std::false_type>();
         timer.clearExpired();

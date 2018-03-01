@@ -215,7 +215,7 @@ int main(int argc, char** argv)
             }
 
             // The timer expiring is an event that breaks from the above.
-            if (watchdog.timerExpired())
+            if (!watchdog.timerEnabled())
             {
                 // Either disable the timer or exit.
                 if (!continueAfterTimeout)
