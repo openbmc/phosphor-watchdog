@@ -45,4 +45,8 @@ class WdogTest : public TimerTest
         // This is just to satisfy the constructor. Does not have
         // a need to check if the objects paths have been created.
         static constexpr auto TEST_PATH = "/test/path";
+
+        // Returns how long it took for the current watchdog timer to be
+        // disabled or have its timeRemaining reset.
+        seconds waitForWatchdog(seconds timeLimit);
 };

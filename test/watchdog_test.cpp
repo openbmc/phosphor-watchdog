@@ -6,12 +6,47 @@
 
 using namespace phosphor::watchdog;
 
+seconds WdogTest::waitForWatchdog(seconds timeLimit)
+{
+    auto previousTimeRemaining = wdog->timeRemaining();
+    auto previousEnabled = wdog->enabled();
+    auto ret = 0s;
+    while (ret < timeLimit &&
+           previousTimeRemaining >= wdog->timeRemaining() &&
+           previousEnabled == wdog->enabled())
+    {
+        previousTimeRemaining = wdog->timeRemaining();
+
+        // Returns -0- on timeout and positive number on dispatch
+        auto sleepTime = 1s;
+        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        {
+            ret += sleepTime;
+        }
+    }
+    return ret;
+}
+
 /** @brief Make sure that watchdog is started and not enabled */
 TEST_F(WdogTest, createWdogAndDontEnable)
 {
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_FALSE(wdog->timerEnabled());
+
+    // We should be able to configure persistent properties
+    // while disabled
+    auto newAction = Watchdog::Action::Poweroff;
+    EXPECT_EQ(newAction, wdog->expireAction(neAction));
+    auto newIntervalMs = milliseconds(defaultInterval * 2).count();
+    EXPECT_EQ(newIntervalMs, wdog->interval(newIntervalMs));
+
+    EXPECT_EQ(newAction, wdog->expireAction());
+    EXPECT_EQ(newIntervalMs, wdog->interval());
+
+    // We won't be able to configure timeRemaining
+    EXPECT_EQ(0, wdog->timeRemaining(1000));
+    EXPECT_EQ(0, wdog->timeRemaining());
 }
 
 /** @brief Make sure that watchdog is started and enabled */
@@ -56,13 +91,12 @@ TEST_F(WdogTest, enableWdogAndWait5Seconds)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Sleep for 5 seconds
-    auto sleepTime = seconds(5s);
+    auto sleepTime = 5s;
     std::this_thread::sleep_for(sleepTime);
 
     // Get the remaining time again and expectation is that we get 25s
     auto remaining = milliseconds(wdog->timeRemaining());
-    auto expected = defaultInterval -
-                    duration_cast<milliseconds>(sleepTime);
+    auto expected = defaultInterval - sleepTime;
 
     // Its possible that we are off by few msecs depending on
     // how we get scheduled. So checking a range here.
@@ -84,23 +118,12 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     std::this_thread::sleep_for(1s);
 
     // Next timer will expire in 5 seconds from now.
-    auto expireTime = seconds(5s);
-    auto newTime = duration_cast<milliseconds>(expireTime);
-    wdog->timeRemaining(newTime.count());
+    auto expireTime = 5s;
+    auto expireTimeMs = milliseconds(expireTime).count();
+    EXPECT_EQ(expireTimeMs, wdog->timeRemaining(expireTimeMs));
 
     // Waiting for expiration
-    int count = 0;
-    while(count < expireTime.count() && wdog->enabled())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = duration_cast<microseconds>(seconds(1s));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
-        {
-            count++;
-        }
-    }
-    EXPECT_FALSE(wdog->timerEnabled());
-    EXPECT_EQ(expireTime.count() - 1, count);
+    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
 
     // Make sure secondary callback was not called.
     EXPECT_FALSE(expired);
@@ -110,9 +133,9 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
  */
 TEST_F(WdogTest, verifyIntervalUpdateReceived)
 {
-    auto expireTime = seconds(5s);
-    auto newTime = duration_cast<milliseconds>(expireTime);
-    wdog->interval(newTime.count());
+    auto expireTime = 5s;
+    auto expireTimeMs = milliseconds(expireTime).count();
+    EXPECT_EQ(expireTimeMs, wdog->interval(expireTimeMs));
 
     // Expect an update in the Interval
     EXPECT_EQ(newTime.count(), wdog->interval());
@@ -125,25 +148,14 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
 {
     // Enable and then verify
     EXPECT_TRUE(wdog->enabled(true));
-    auto expireTime = duration_cast<seconds>(
-                        milliseconds(defaultInterval));
+    auto expireTime = defaultInterval;
 
     // Waiting default expiration
-    int count = 0;
-    while(count < expireTime.count() && wdog->enabled())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = duration_cast<microseconds>(seconds(1s));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
-        {
-            count++;
-        }
-    }
+    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
 
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_FALSE(wdog->timerEnabled());
-    EXPECT_EQ(expireTime.count() - 1, count);
 }
 
 /** @brief Make sure the watchdog is started and enabled with a fallback
@@ -176,17 +188,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    auto waited = 0s;
-    while(waited < primaryInterval && wdog->enabled())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = 1s;
-        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
-        {
-            waited += sleepTime;
-        }
-    }
-    EXPECT_EQ(primaryInterval - 1s, waited);
+    EXPECT_EQ(primaryInterval - 1s, waitForWatchDog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -218,17 +220,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     EXPECT_TRUE(wdog->timerEnabled());
 
     // Waiting fallback expiration
-    waited = 0s;
-    while(waited < fallbackInterval && wdog->timerEnabled())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = 1s;
-        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
-        {
-            waited += sleepTime;
-        }
-    }
-    EXPECT_EQ(fallbackInterval - 1s, waited);
+    EXPECT_EQ(fallbackInterval - 1s, waitForWatchdog(fallbackInterval));
 
     // We should now have disabled the watchdog after the fallback expires
     EXPECT_FALSE(wdog->enabled());
@@ -274,17 +266,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    auto waited = 0s;
-    while(waited <= primaryInterval && wdog->enabled())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = 1s;
-        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
-        {
-            waited += sleepTime;
-        }
-    }
-    EXPECT_EQ(primaryInterval - 1s, waited);
+    EXPECT_EQ(primaryInterval - 1s, waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -337,17 +319,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_GE(primaryInterval, milliseconds(wdog->timeRemaining()));
 
     // Waiting default expiration
-    auto waited = 0s;
-    while(waited < primaryInterval && wdog->enabled())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = 1s;
-        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
-        {
-            waited += sleepTime;
-        }
-    }
-    EXPECT_EQ(primaryInterval - 1s, waited);
+    EXPECT_EQ(primaryInterval - 1s, waitForWatchDog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -357,20 +329,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_TRUE(wdog->timerEnabled());
 
     // Waiting fallback expiration
-    waited = 0s;
-    while(waited < fallbackInterval &&
-          remaining >= milliseconds(wdog->timeRemaining()))
-    {
-        remaining = milliseconds(wdog->timeRemaining());
-
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = 1s;
-        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
-        {
-            waited += sleepTime;
-        }
-    }
-    EXPECT_EQ(fallbackInterval - 1s, waited);
+    EXPECT_EQ(fallbackInterval - 1s, waitForWatchDog(fallbackInterval));
 
     // We should now enter the fallback again
     EXPECT_FALSE(wdog->enabled());
