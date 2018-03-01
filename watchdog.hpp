@@ -93,6 +93,12 @@ class Watchdog : public WatchdogInherits
             return timer.expired();
         }
 
+        /** @brief Tells if the timer is running or not */
+        inline bool timerEnabled() const
+        {
+            return timer.getEnabled() != SD_EVENT_OFF;
+        }
+
     private:
         /** @brief sdbusplus handle */
         sdbusplus::bus::bus& bus;

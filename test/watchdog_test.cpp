@@ -8,6 +8,7 @@ TEST_F(WdogTest, createWdogAndDontEnable)
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_FALSE(wdog->timerEnabled());
 }
 
 /** @brief Make sure that watchdog is started and enabled */
@@ -16,6 +17,7 @@ TEST_F(WdogTest, createWdogAndEnable)
     // Enable and then verify
     EXPECT_TRUE(wdog->enabled(true));
     EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
 
     // Get the configured interval
     auto remaining = milliseconds(wdog->timeRemaining());
@@ -26,6 +28,7 @@ TEST_F(WdogTest, createWdogAndEnable)
                 (remaining <= defaultInterval));
 
     EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
 }
 
 /** @brief Make sure that watchdog is started and enabled.
@@ -40,6 +43,8 @@ TEST_F(WdogTest, createWdogAndEnableThenDisable)
     EXPECT_FALSE(wdog->enabled(false));
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_FALSE(wdog->timerEnabled());
 }
 
 /** @brief Make sure that watchdog is started and enabled.
@@ -65,6 +70,7 @@ TEST_F(WdogTest, enableWdogAndWait5Seconds)
     EXPECT_TRUE((remaining >= expected - defaultDrift) &&
                 (remaining <= expected));
     EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
 }
 
 /** @brief Make sure that watchdog is started and enabled.
@@ -96,7 +102,8 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
         }
     }
     EXPECT_TRUE(wdog->timerExpired());
-    EXPECT_EQ(expireTime.count() - 1 , count);
+    EXPECT_FALSE(wdog->timerEnabled());
+    EXPECT_EQ(expireTime.count() - 1, count);
 
     // Make sure secondary callback was not called.
     EXPECT_FALSE(expired);
@@ -138,5 +145,6 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
     EXPECT_TRUE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_TRUE(wdog->timerExpired());
+    EXPECT_FALSE(wdog->timerEnabled());
     EXPECT_EQ(expireTime.count() - 1, count);
 }
