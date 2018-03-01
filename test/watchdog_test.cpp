@@ -1,6 +1,29 @@
-#include <watchdog_test.hpp>
+#include <chrono>
+
+#include "watchdog_test.hpp"
 
 using namespace phosphor::watchdog;
+
+seconds WdogTest::waitForWatchdog(seconds timeLimit)
+{
+    auto previousTimeRemaining = wdog->timeRemaining();
+    auto ret = 0s;
+    while (ret < timeLimit &&
+           previousTimeRemaining >= wdog->timeRemaining() &&
+           wdog->timerEnabled())
+    {
+        previousTimeRemaining = wdog->timeRemaining();
+
+        // Returns -0- on timeout and positive number on dispatch
+        auto sleepTime = 1s;
+        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        {
+            ret += sleepTime;
+        }
+    }
+
+    return ret;
+}
 
 /** @brief Make sure that watchdog is started and not enabled */
 TEST_F(WdogTest, createWdogAndDontEnable)
@@ -91,19 +114,9 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     wdog->timeRemaining(newTime.count());
 
     // Waiting for expiration
-    int count = 0;
-    while(count < expireTime.count() && !wdog->timerExpired())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = duration_cast<microseconds>(seconds(1s));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
-        {
-            count++;
-        }
-    }
+    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
-    EXPECT_EQ(expireTime.count() - 1, count);
 
     // Make sure secondary callback was not called.
     EXPECT_FALSE(expired);
@@ -132,19 +145,10 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
                         milliseconds(defaultInterval));
 
     // Waiting default expiration
-    int count = 0;
-    while(count < expireTime.count() && !wdog->timerExpired())
-    {
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = duration_cast<microseconds>(seconds(1s));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
-        {
-            count++;
-        }
-    }
-    EXPECT_TRUE(wdog->enabled());
+    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
+
+    EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
-    EXPECT_EQ(expireTime.count() - 1, count);
 }
