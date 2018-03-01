@@ -84,7 +84,7 @@ class Watchdog : public WatchdogInherits
 
         /** @brief Gets the remaining time before watchdog expires.
          *
-         *  @return 0 if watchdog is disabled or expired.
+         *  @return 0 if watchdog is expired.
          *          Remaining time in milliseconds otherwise.
          */
         uint64_t timeRemaining() const override;
@@ -99,10 +99,9 @@ class Watchdog : public WatchdogInherits
          */
         uint64_t timeRemaining(uint64_t value) override;
 
-        /** @brief Tells if the referenced timer is expired or not */
-        inline auto timerExpired() const
+        inline bool timerEnabled()
         {
-            return timer.expired();
+            return timer.getEnabled() != SD_EVENT_OFF;
         }
 
     private:
