@@ -1,6 +1,29 @@
-#include <watchdog_test.hpp>
+#include <chrono>
+
+#include "watchdog_test.hpp"
 
 using namespace phosphor::watchdog;
+
+seconds WdogTest::waitForWatchdog(seconds timeLimit)
+{
+    auto previousTimeRemaining = wdog->timeRemaining();
+    auto ret = 0s;
+    while (ret < timeLimit &&
+           previousTimeRemaining >= wdog->timeRemaining() &&
+           wdog->timerEnabled())
+    {
+        previousTimeRemaining = wdog->timeRemaining();
+
+        // Returns -0- on timeout and positive number on dispatch
+        auto sleepTime = 1s;
+        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        {
+            ret += sleepTime;
+        }
+    }
+
+    return ret;
+}
 
 /** @brief Make sure that watchdog is started and not enabled */
 TEST_F(WdogTest, createWdogAndDontEnable)
