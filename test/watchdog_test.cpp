@@ -32,6 +32,26 @@ TEST_F(WdogTest, createWdogAndDontEnable)
     EXPECT_EQ(0, wdog->timeRemaining());
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
+
+    // We should be able to configure persistent properties
+    // while disabled
+    auto newAction = Watchdog::Action::PowerOff;
+    EXPECT_EQ(newAction, wdog->expireAction(newAction));
+    auto newIntervalMs = milliseconds(defaultInterval * 2).count();
+    EXPECT_EQ(newIntervalMs, wdog->interval(newIntervalMs));
+
+    EXPECT_EQ(newAction, wdog->expireAction());
+    EXPECT_EQ(newIntervalMs, wdog->interval());
+
+    // We won't be able to configure timeRemaining
+    EXPECT_EQ(0, wdog->timeRemaining(1000));
+    EXPECT_EQ(0, wdog->timeRemaining());
+
+    // Timer should not have become enabled
+    EXPECT_FALSE(wdog->enabled());
+    EXPECT_EQ(0, wdog->timeRemaining());
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_FALSE(wdog->timerEnabled());
 }
 
 /** @brief Make sure that watchdog is started and enabled */
