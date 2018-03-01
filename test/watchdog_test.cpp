@@ -100,13 +100,12 @@ TEST_F(WdogTest, enableWdogAndWait5Seconds)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Sleep for 5 seconds
-    auto sleepTime = seconds(5s);
+    auto sleepTime = 5s;
     std::this_thread::sleep_for(sleepTime);
 
     // Get the remaining time again and expectation is that we get 25s
     auto remaining = milliseconds(wdog->timeRemaining());
-    auto expected = defaultInterval -
-                    duration_cast<milliseconds>(sleepTime);
+    auto expected = defaultInterval - sleepTime;
 
     // Its possible that we are off by few msecs depending on
     // how we get scheduled. So checking a range here.
@@ -129,9 +128,9 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     std::this_thread::sleep_for(1s);
 
     // Next timer will expire in 5 seconds from now.
-    auto expireTime = seconds(5s);
-    auto newTime = duration_cast<milliseconds>(expireTime);
-    wdog->timeRemaining(newTime.count());
+    auto expireTime = 5s;
+    auto expireTimeMs = milliseconds(expireTime).count();
+    EXPECT_EQ(expireTimeMs, wdog->timeRemaining(expireTimeMs));
 
     // Waiting for expiration
     EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
@@ -146,9 +145,9 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
  */
 TEST_F(WdogTest, verifyIntervalUpdateReceived)
 {
-    auto expireTime = seconds(5s);
-    auto newTime = duration_cast<milliseconds>(expireTime);
-    wdog->interval(newTime.count());
+    auto expireTime = 5s;
+    auto expireTimeMs = milliseconds(expireTime).count();
+    EXPECT_EQ(expireTimeMs, wdog->interval(expireTimeMs));
 
     // Expect an update in the Interval
     EXPECT_EQ(newTime.count(), wdog->interval());
@@ -161,8 +160,7 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
 {
     // Enable and then verify
     EXPECT_TRUE(wdog->enabled(true));
-    auto expireTime = duration_cast<seconds>(
-                        milliseconds(defaultInterval));
+    auto expireTime = defaultInterval;
 
     // Waiting default expiration
     EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
