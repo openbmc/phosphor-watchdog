@@ -90,7 +90,7 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
 
     // Waiting for expiration
     int count = 0;
-    while(count < expireTime.count() && !wdog->timerExpired())
+    while(count <= expireTime.count() && !wdog->timerExpired())
     {
         // Returns -0- on timeout and positive number on dispatch
         auto sleepTime = duration_cast<microseconds>(seconds(1s));
@@ -130,7 +130,7 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
 
     // Waiting default expiration
     int count = 0;
-    while(count < expireTime.count() && !wdog->timerExpired())
+    while(count <= expireTime.count() && !wdog->timerExpired())
     {
         // Returns -0- on timeout and positive number on dispatch
         auto sleepTime = duration_cast<microseconds>(seconds(1s));
@@ -170,7 +170,7 @@ TEST_F(WdogTest, enableWdogWithFallback)
 
     // Waiting default expiration
     auto waited = 0s;
-    while(waited < defaultInterval && !wdog->timerExpired())
+    while(waited <= defaultInterval && !wdog->timerExpired())
     {
         // Returns -0- on timeout and positive number on dispatch
         auto sleepTime = 1s;
@@ -179,6 +179,8 @@ TEST_F(WdogTest, enableWdogWithFallback)
             waited += sleepTime;
         }
     }
+    std::cerr << "Primary: " << milliseconds(defaultInterval).count() << std::endl;
+    std::cerr << "Waited: " << milliseconds(waited).count() << std::endl;
     EXPECT_EQ(defaultInterval, waited);
 
     // We should now have entered the fallback once the primary expires
@@ -213,7 +215,7 @@ TEST_F(WdogTest, enableWdogWithFallback)
 
     // Waiting fallback expiration
     waited = 0s;
-    while(waited < fallbackInterval && !wdog->timerExpired())
+    while(waited <= fallbackInterval && !wdog->timerExpired())
     {
         // Returns -0- on timeout and positive number on dispatch
         auto sleepTime = 1s;
@@ -222,6 +224,8 @@ TEST_F(WdogTest, enableWdogWithFallback)
             waited += sleepTime;
         }
     }
+    std::cerr << "Fallback: " << milliseconds(fallbackInterval).count() << std::endl;
+    std::cerr << "Waited: " << milliseconds(waited).count() << std::endl;
     EXPECT_EQ(fallbackInterval, waited);
 
     // We should now have disabled the watchdog after the fallback expires
