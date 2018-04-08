@@ -99,7 +99,7 @@ int Timer::getEnabled() const
     auto r = sd_event_source_get_enabled(eventSource.get(), &enabled);
     if (r < 0)
     {
-        log<level::ERR>("Error geting current timer type enablement state");
+        log<level::ERR>("Error getting current timer type enablement state");
         elog<InternalFailure>();
     }
     return enabled;
