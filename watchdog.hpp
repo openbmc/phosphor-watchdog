@@ -66,6 +66,13 @@ class Watchdog : public WatchdogInherits
             tryFallbackOrDisable();
         }
 
+        /** @brief Resets the TimeRemaining to the configured Interval
+         *         Optionally enables the watchdog.
+         *
+         *  @param[in] enableWatchdog - Should the call enable the watchdog
+         */
+        void resetTimeRemaining(bool enableWatchdog) override;
+
         /** @brief Since we are overriding the setter-enabled but not the
          *         getter-enabled, we need to have this using in order to
          *         allow passthrough usage of the getter-enabled.

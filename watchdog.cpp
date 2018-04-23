@@ -14,6 +14,15 @@ constexpr auto SYSTEMD_SERVICE    = "org.freedesktop.systemd1";
 constexpr auto SYSTEMD_ROOT       = "/org/freedesktop/systemd1";
 constexpr auto SYSTEMD_INTERFACE  = "org.freedesktop.systemd1.Manager";
 
+void Watchdog::resetTimeRemaining(bool enableWatchdog)
+{
+    timeRemaining(interval());
+    if (enableWatchdog)
+    {
+        enabled(true);
+    }
+}
+
 // Enable or disable watchdog
 bool Watchdog::enabled(bool value)
 {
