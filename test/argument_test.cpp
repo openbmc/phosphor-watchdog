@@ -1,8 +1,9 @@
-#include <string>
-#include <vector>
+#include "argument_test.hpp"
 
 #include "argument.hpp"
-#include "argument_test.hpp"
+
+#include <string>
+#include <vector>
 
 static const std::string expected_path1 = "/arg1-test-path";
 static const std::string expected_target1 = "t1.target";
@@ -10,7 +11,7 @@ static const std::string expected_target2 = "t2.target";
 
 // Allow for a single unrecognized option then the Usage printout
 static const std::string invalid_arg_regex =
-        "^[^\n]*unrecognized option[^\n]*\nUsage: ";
+    "^[^\n]*unrecognized option[^\n]*\nUsage: ";
 
 static const std::string clean_usage_regex = "^Usage: ";
 
@@ -27,10 +28,8 @@ void ArgumentTest::SetUp()
 /** @brief ArgumentParser should return no values if given no options */
 TEST_F(ArgumentTest, NoOptions)
 {
-    char * const args[] = {
-        &arg0[0], nullptr
-    };
-    ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
+    char* const args[] = {&arg0[0], nullptr};
+    ArgumentParser ap(sizeof(args) / sizeof(char*) - 1, args);
     EXPECT_EQ(std::vector<std::string>({}), ap["path"]);
     EXPECT_EQ(std::vector<std::string>({}), ap["continue"]);
     EXPECT_EQ(std::vector<std::string>({}), ap["arbitrary_unknown"]);
@@ -44,13 +43,11 @@ TEST_F(ArgumentTest, LongOptionNoArg)
 {
     std::string arg_continue = "--continue";
     std::string arg_extra = "not-a-bool";
-    char * const args[] = {
-        &arg0[0], &arg_continue[0], &arg_extra[0], nullptr
-    };
-    ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
+    char* const args[] = {&arg0[0], &arg_continue[0], &arg_extra[0], nullptr};
+    ArgumentParser ap(sizeof(args) / sizeof(char*) - 1, args);
     EXPECT_EQ(std::vector<std::string>({}), ap["path"]);
     EXPECT_EQ(std::vector<std::string>({ArgumentParser::trueString}),
-            ap["continue"]);
+              ap["continue"]);
 }
 
 /** @brief ArgumentParser should return a string for long options that
@@ -61,10 +58,9 @@ TEST_F(ArgumentTest, LongOptionRequiredArg)
     std::string arg_path = "--path";
     std::string arg_path_val = expected_path1;
     std::string arg_extra = "/unused-path";
-    char * const args[] = {
-        &arg0[0], &arg_path[0], &arg_path_val[0], &arg_extra[0], nullptr
-    };
-    ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
+    char* const args[] = {&arg0[0], &arg_path[0], &arg_path_val[0],
+                          &arg_extra[0], nullptr};
+    ArgumentParser ap(sizeof(args) / sizeof(char*) - 1, args);
     EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
 }
 
@@ -75,10 +71,8 @@ TEST_F(ArgumentTest, LongOptionInlineArg)
 {
     std::string arg_path = "--path=" + expected_path1;
     std::string arg_extra = "/unused-path";
-    char * const args[] = {
-        &arg0[0], &arg_path[0], &arg_extra[0], nullptr
-    };
-    ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
+    char* const args[] = {&arg0[0], &arg_path[0], &arg_extra[0], nullptr};
+    ArgumentParser ap(sizeof(args) / sizeof(char*) - 1, args);
     EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
 }
 
@@ -90,10 +84,9 @@ TEST_F(ArgumentTest, ShortOptionRequiredArg)
     std::string arg_path = "-p";
     std::string arg_path_val = expected_path1;
     std::string arg_extra = "/unused-path";
-    char * const args[] = {
-        &arg0[0], &arg_path[0], &arg_path_val[0], &arg_extra[0], nullptr
-    };
-    ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
+    char* const args[] = {&arg0[0], &arg_path[0], &arg_path_val[0],
+                          &arg_extra[0], nullptr};
+    ArgumentParser ap(sizeof(args) / sizeof(char*) - 1, args);
     EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
 }
 
@@ -109,17 +102,17 @@ TEST_F(ArgumentTest, MultiOptionOverride)
     std::string arg_target = "--target=" + expected_target2;
     std::string arg_target_short = "-t";
     std::string arg_target_val = expected_target1;
-    char * const args[] = {
-        &arg0[0], &arg_continue_short[0], &arg_path[0], &arg_continue_long[0],
-        &arg_target[0], &arg_target_short[0], &arg_target_val[0], nullptr
-    };
-    ArgumentParser ap(sizeof(args)/sizeof(char *) - 1, args);
+    char* const args[] = {&arg0[0],           &arg_continue_short[0],
+                          &arg_path[0],       &arg_continue_long[0],
+                          &arg_target[0],     &arg_target_short[0],
+                          &arg_target_val[0], nullptr};
+    ArgumentParser ap(sizeof(args) / sizeof(char*) - 1, args);
     EXPECT_EQ(std::vector<std::string>({expected_path1}), ap["path"]);
-    EXPECT_EQ(std::vector<std::string>({
-                ArgumentParser::trueString, ArgumentParser::trueString}),
-            ap["continue"]);
+    EXPECT_EQ(std::vector<std::string>(
+                  {ArgumentParser::trueString, ArgumentParser::trueString}),
+              ap["continue"]);
     EXPECT_EQ(std::vector<std::string>({expected_target2, expected_target1}),
-            ap["target"]);
+              ap["target"]);
 }
 
 /** @brief ArgumentParser should print usage information when given a help
@@ -129,11 +122,9 @@ TEST_F(ArgumentTest, ShortOptionHelp)
 {
     std::string arg_extra = "extra";
     std::string arg_help = "-h";
-    char * const args[] = {
-        &arg0[0], &arg_extra[0], &arg_help[0], nullptr
-    };
-    EXPECT_EXIT(ArgumentParser(sizeof(args)/sizeof(char *) - 1, args),
-            ::testing::ExitedWithCode(255), clean_usage_regex);
+    char* const args[] = {&arg0[0], &arg_extra[0], &arg_help[0], nullptr};
+    EXPECT_EXIT(ArgumentParser(sizeof(args) / sizeof(char*) - 1, args),
+                ::testing::ExitedWithCode(255), clean_usage_regex);
 }
 
 /** @brief ArgumentParser should print usage information when given a help
@@ -143,11 +134,9 @@ TEST_F(ArgumentTest, LongOptionHelp)
 {
     std::string arg_help = "--help";
     std::string arg_extra = "extra";
-    char * const args[] = {
-        &arg0[0], &arg_help[0], &arg_extra[0], nullptr
-    };
-    EXPECT_EXIT(ArgumentParser(sizeof(args)/sizeof(char *) - 1, args),
-            ::testing::ExitedWithCode(255), clean_usage_regex);
+    char* const args[] = {&arg0[0], &arg_help[0], &arg_extra[0], nullptr};
+    EXPECT_EXIT(ArgumentParser(sizeof(args) / sizeof(char*) - 1, args),
+                ::testing::ExitedWithCode(255), clean_usage_regex);
 }
 
 /** @brief ArgumentParser should print an invalid argument error and
@@ -159,12 +148,11 @@ TEST_F(ArgumentTest, InvalidOptionHelp)
     std::string arg_continue = "--continue";
     std::string arg_bad = "--bad_arg";
     std::string arg_target = "--target=/unused-path";
-    char * const args[] = {
-        &arg0[0], &arg_continue[0], &arg_bad[0], &arg_target[0], nullptr
-    };
-    EXPECT_EXIT(ArgumentParser(sizeof(args)/sizeof(char *) - 1, args),
-            ::testing::ExitedWithCode(255), invalid_arg_regex);
+    char* const args[] = {&arg0[0], &arg_continue[0], &arg_bad[0],
+                          &arg_target[0], nullptr};
+    EXPECT_EXIT(ArgumentParser(sizeof(args) / sizeof(char*) - 1, args),
+                ::testing::ExitedWithCode(255), invalid_arg_regex);
 }
 
-}  // namespace watchdog
-}  // namespace phosphor
+} // namespace watchdog
+} // namespace phosphor

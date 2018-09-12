@@ -21,11 +21,11 @@ TEST_F(TimerTest, testTimerForExpirationDefaultTimeoutHandler)
 
     // Waiting 2 seconds to expect expiration
     int count = 0;
-    while(count < expireTime.count() && !timer.expired())
+    while (count < expireTime.count() && !timer.expired())
     {
         // Returns -0- on timeout and positive number on dispatch
         auto sleepTime = duration_cast<microseconds>(seconds(1));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
+        if (!sd_event_run(eventP.get(), sleepTime.count()))
         {
             count++;
         }
@@ -46,8 +46,8 @@ TEST_F(TimerTest, testTimerForExpirationSecondCallBack)
     // Expect timer to expire in 2 seconds
     auto expireTime = seconds(2s);
 
-    phosphor::watchdog::Timer timer(eventP,
-                    std::bind(&TimerTest::timeOutHandler, this));
+    phosphor::watchdog::Timer timer(
+        eventP, std::bind(&TimerTest::timeOutHandler, this));
 
     // Set the expiration and enable the timer
     timer.start(duration_cast<milliseconds>(expireTime));
@@ -55,11 +55,11 @@ TEST_F(TimerTest, testTimerForExpirationSecondCallBack)
 
     // Waiting 2 seconds to expect expiration
     int count = 0;
-    while(count < expireTime.count() && !timer.expired())
+    while (count < expireTime.count() && !timer.expired())
     {
         // Returns -0- on timeout and positive number on dispatch
         auto sleepTime = duration_cast<microseconds>(seconds(1));
-        if(!sd_event_run(eventP.get(), sleepTime.count()))
+        if (!sd_event_run(eventP.get(), sleepTime.count()))
         {
             count++;
         }

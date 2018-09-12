@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <experimental/optional>
-#include <phosphor-logging/log.hpp>
-#include <phosphor-logging/elog.hpp>
-#include <phosphor-logging/elog-errors.hpp>
-#include <string>
-#include <xyz/openbmc_project/Common/error.hpp>
 #include "argument.hpp"
 #include "watchdog.hpp"
+
+#include <experimental/optional>
+#include <iostream>
+#include <phosphor-logging/elog-errors.hpp>
+#include <phosphor-logging/elog.hpp>
+#include <phosphor-logging/log.hpp>
+#include <string>
+#include <xyz/openbmc_project/Common/error.hpp>
 
 using phosphor::watchdog::ArgumentParser;
 using phosphor::watchdog::Watchdog;
@@ -36,13 +37,13 @@ static void exitWithError(const char* err, char** argv)
 }
 
 void printActionTargets(
-        const std::map<Watchdog::Action, std::string>& actionTargets)
+    const std::map<Watchdog::Action, std::string>& actionTargets)
 {
     std::cerr << "Action Targets:\n";
     for (const auto& actionTarget : actionTargets)
     {
-        std::cerr << "  " << convertForMessage(actionTarget.first) << " -> " <<
-            actionTarget.second << "\n";
+        std::cerr << "  " << convertForMessage(actionTarget.first) << " -> "
+                  << actionTarget.second << "\n";
     }
     std::cerr << std::flush;
 }
@@ -50,8 +51,8 @@ void printActionTargets(
 int main(int argc, char** argv)
 {
     using namespace phosphor::logging;
-    using InternalFailure = sdbusplus::xyz::openbmc_project::Common::
-                                Error::InternalFailure;
+    using InternalFailure =
+        sdbusplus::xyz::openbmc_project::Common::Error::InternalFailure;
     // Read arguments.
     auto options = ArgumentParser(argc, argv);
 
@@ -97,7 +98,8 @@ int main(int argc, char** argv)
         exitWithError("Multiple targets specified.", argv);
     }
     std::map<Watchdog::Action, Watchdog::TargetName> actionTargets;
-    if (!targetParam.empty()) {
+    if (!targetParam.empty())
+    {
         auto target = targetParam.back();
         actionTargets[Watchdog::Action::HardReset] = target;
         actionTargets[Watchdog::Action::PowerOff] = target;
@@ -112,12 +114,12 @@ int main(int argc, char** argv)
         if (keyValueSplit == std::string::npos)
         {
             exitWithError(
-                    "Invalid action_target format, expect <action>=<target>.",
-                    argv);
+                "Invalid action_target format, expect <action>=<target>.",
+                argv);
         }
 
         std::string key = actionTarget.substr(0, keyValueSplit);
-        std::string value = actionTarget.substr(keyValueSplit+1);
+        std::string value = actionTarget.substr(keyValueSplit + 1);
 
         // Convert an action from a fully namespaced value
         Watchdog::Action action;
@@ -125,7 +127,7 @@ int main(int argc, char** argv)
         {
             action = Watchdog::convertActionFromString(key);
         }
-        catch (const sdbusplus::exception::InvalidEnumString &)
+        catch (const sdbusplus::exception::InvalidEnumString&)
         {
             exitWithError("Bad action specified.", argv);
         }
@@ -153,10 +155,10 @@ int main(int argc, char** argv)
         Watchdog::Action action;
         try
         {
-            action = Watchdog::convertActionFromString(
-                    fallbackActionParam.back());
+            action =
+                Watchdog::convertActionFromString(fallbackActionParam.back());
         }
-        catch (const sdbusplus::exception::InvalidEnumString &)
+        catch (const sdbusplus::exception::InvalidEnumString&)
         {
             exitWithError("Bad action specified.", argv);
         }
@@ -165,9 +167,10 @@ int main(int argc, char** argv)
         {
             interval = std::stoull(fallbackIntervalParam.back());
         }
-        catch (const std::logic_error &)
+        catch (const std::logic_error&)
         {
-            exitWithError("Failed to convert fallback interval to integer.", argv);
+            exitWithError("Failed to convert fallback interval to integer.",
+                          argv);
         }
         fallback = Watchdog::Fallback{
             .action = action,
@@ -182,7 +185,8 @@ int main(int argc, char** argv)
         if (!fallback)
         {
             exitWithError("Specified the fallback should always be enabled but "
-                    "no fallback provided.", argv);
+                          "no fallback provided.",
+                          argv);
         }
         fallback->always = true;
     }
@@ -210,7 +214,7 @@ int main(int argc, char** argv)
     {
         // Create a watchdog object
         Watchdog watchdog(bus, path.c_str(), eventP, std::move(actionTargets),
-            std::move(fallback));
+                          std::move(fallback));
 
         // Claim the bus
         bus.request_name(service.c_str());
@@ -227,7 +231,7 @@ int main(int argc, char** argv)
             }
         }
     }
-    catch(InternalFailure& e)
+    catch (InternalFailure& e)
     {
         phosphor::logging::commit<InternalFailure>();
 

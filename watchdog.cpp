@@ -1,6 +1,7 @@
+#include "watchdog.hpp"
+
 #include <chrono>
 #include <phosphor-logging/log.hpp>
-#include "watchdog.hpp"
 namespace phosphor
 {
 namespace watchdog
@@ -10,9 +11,9 @@ using namespace std::chrono_literals;
 using namespace phosphor::logging;
 
 // systemd service to kick start a target.
-constexpr auto SYSTEMD_SERVICE    = "org.freedesktop.systemd1";
-constexpr auto SYSTEMD_ROOT       = "/org/freedesktop/systemd1";
-constexpr auto SYSTEMD_INTERFACE  = "org.freedesktop.systemd1.Manager";
+constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
+constexpr auto SYSTEMD_ROOT = "/org/freedesktop/systemd1";
+constexpr auto SYSTEMD_INTERFACE = "org.freedesktop.systemd1.Manager";
 
 void Watchdog::resetTimeRemaining(bool enableWatchdog)
 {
@@ -40,8 +41,7 @@ bool Watchdog::enabled(bool value)
     else if (!this->enabled())
     {
         // Start ONESHOT timer. Timer handles all in usec
-        auto usec = duration_cast<microseconds>(
-                milliseconds(this->interval()));
+        auto usec = duration_cast<microseconds>(milliseconds(this->interval()));
 
         // Update new expiration
         timer.clearExpired();
@@ -51,7 +51,7 @@ bool Watchdog::enabled(bool value)
         timer.setEnabled<std::true_type>();
 
         log<level::INFO>("watchdog: enabled and started",
-                entry("INTERVAL=%llu", this->interval()));
+                         entry("INTERVAL=%llu", this->interval()));
     }
 
     return WatchdogInherits::enabled(value);
@@ -67,17 +67,14 @@ uint64_t Watchdog::timeRemaining() const
     if (timerEnabled())
     {
         // the one-shot timer does not expire yet
-        auto expiry = duration_cast<milliseconds>(
-                timer.getRemaining());
+        auto expiry = duration_cast<milliseconds>(timer.getRemaining());
 
         // convert to msec per interface expectation.
-        auto timeNow = duration_cast<milliseconds>(
-                Timer::getCurrentTime());
+        auto timeNow = duration_cast<milliseconds>(Timer::getCurrentTime());
 
         // Its possible that timer may have expired by now.
         // So need to cross verify.
-        timeRemain = (expiry > timeNow) ?
-            (expiry - timeNow).count() : 0;
+        timeRemain = (expiry > timeNow) ? (expiry - timeNow).count() : 0;
     }
     return timeRemain;
 }
@@ -119,20 +116,18 @@ void Watchdog::timeOutHandler()
     if (target == actionTargets.end())
     {
         log<level::INFO>("watchdog: Timed out with no target",
-                entry("ACTION=%s", convertForMessage(action).c_str()));
+                         entry("ACTION=%s", convertForMessage(action).c_str()));
     }
     else
     {
-        auto method = bus.new_method_call(SYSTEMD_SERVICE,
-                SYSTEMD_ROOT,
-                SYSTEMD_INTERFACE,
-                "StartUnit");
+        auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
+                                          SYSTEMD_INTERFACE, "StartUnit");
         method.append(target->second);
         method.append("replace");
 
         log<level::INFO>("watchdog: Timed out",
-                entry("ACTION=%s", convertForMessage(action).c_str()),
-                entry("TARGET=%s", target->second.c_str()));
+                         entry("ACTION=%s", convertForMessage(action).c_str()),
+                         entry("TARGET=%s", target->second.c_str()));
         bus.call_noreply(method);
     }
 
@@ -146,14 +141,15 @@ void Watchdog::tryFallbackOrDisable()
     if (fallback && (fallback->always || this->enabled()))
     {
         auto interval_ms = fallback->interval;
-        auto interval_us = duration_cast<microseconds>(milliseconds(interval_ms));
+        auto interval_us =
+            duration_cast<microseconds>(milliseconds(interval_ms));
 
         timer.clearExpired();
         timer.start(interval_us);
         timer.setEnabled<std::true_type>();
 
         log<level::INFO>("watchdog: falling back",
-                entry("INTERVAL=%llu", interval_ms));
+                         entry("INTERVAL=%llu", interval_ms));
     }
     else if (timerEnabled())
     {
@@ -168,4 +164,4 @@ void Watchdog::tryFallbackOrDisable()
 }
 
 } // namespace watchdog
-} // namepsace phosphor
+} // namespace phosphor
