@@ -11,11 +11,11 @@ namespace watchdog
 
 class ArgumentTest : public testing::Test
 {
-    protected:
-        void SetUp() override;
+  protected:
+    void SetUp() override;
 
-        std::string arg0;
+    std::string arg0;
 };
 
-}  // namespace watchdog
-}  // namespace phosphor
+} // namespace watchdog
+} // namespace phosphor

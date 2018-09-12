@@ -1,10 +1,12 @@
-#include <chrono>
-#include <systemd/sd-event.h>
-#include <phosphor-logging/log.hpp>
-#include <phosphor-logging/elog.hpp>
-#include <phosphor-logging/elog-errors.hpp>
-#include <xyz/openbmc_project/Common/error.hpp>
 #include "timer.hpp"
+
+#include <systemd/sd-event.h>
+
+#include <chrono>
+#include <phosphor-logging/elog-errors.hpp>
+#include <phosphor-logging/elog.hpp>
+#include <phosphor-logging/log.hpp>
+#include <xyz/openbmc_project/Common/error.hpp>
 namespace phosphor
 {
 namespace watchdog
@@ -12,8 +14,8 @@ namespace watchdog
 
 // For throwing exception
 using namespace phosphor::logging;
-using InternalFailure = sdbusplus::xyz::openbmc_project::Common::
-                            Error::InternalFailure;
+using InternalFailure =
+    sdbusplus::xyz::openbmc_project::Common::Error::InternalFailure;
 
 // Initializes the timer object
 void Timer::initialize()
@@ -27,8 +29,7 @@ void Timer::initialize()
 
     // Add infinite expiration time
     decltype(eventSource.get()) sourcePtr = nullptr;
-    auto r = sd_event_add_time(event.get(),
-                               &sourcePtr,
+    auto r = sd_event_add_time(event.get(), &sourcePtr,
                                CLOCK_MONOTONIC, // Time base
                                UINT64_MAX,      // Expire time - way long time
                                0,               // Use default event accuracy
@@ -47,8 +48,8 @@ void Timer::initialize()
 }
 
 // callback handler on timeout
-int Timer::timeoutHandler(sd_event_source* eventSource,
-                          uint64_t usec, void* userData)
+int Timer::timeoutHandler(sd_event_source* eventSource, uint64_t usec,
+                          void* userData)
 {
     using namespace phosphor::logging;
 
@@ -58,7 +59,7 @@ int Timer::timeoutHandler(sd_event_source* eventSource,
     timer->expire = true;
 
     // Call an optional callback function
-    if(timer->userCallBack)
+    if (timer->userCallBack)
     {
         timer->userCallBack();
     }
@@ -82,12 +83,12 @@ void Timer::start(std::chrono::microseconds usec)
     auto expireTime = getCurrentTime() + usec;
 
     // Set the time
-    auto r = sd_event_source_set_time(eventSource.get(),
-                                      expireTime.count());
+    auto r = sd_event_source_set_time(eventSource.get(), expireTime.count());
     if (r < 0)
     {
-        log<level::ERR>("Error setting the expiration time",
-                entry("MSEC=%llu",duration_cast<milliseconds>(usec).count()));
+        log<level::ERR>(
+            "Error setting the expiration time",
+            entry("MSEC=%llu", duration_cast<milliseconds>(usec).count()));
         elog<InternalFailure>();
     }
 }
@@ -111,8 +112,7 @@ void Timer::setEnabled(int type)
     auto r = sd_event_source_set_enabled(eventSource.get(), type);
     if (r < 0)
     {
-        log<level::ERR>("Error setting the timer type",
-                entry("TYPE=%d",type));
+        log<level::ERR>("Error setting the timer type", entry("TYPE=%d", type));
         elog<InternalFailure>();
     }
 }

@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <cassert>
 #include "argument.hpp"
+
+#include <cassert>
+#include <iostream>
 
 namespace phosphor
 {
@@ -29,6 +30,7 @@ const std::vector<std::string> emptyArg;
 const std::string ArgumentParser::trueString = "true"s;
 
 const char* ArgumentParser::optionStr = "p:s:t:a:f:i:ech";
+// clang-format off
 const option ArgumentParser::options[] =
 {
     { "path",                    required_argument,  nullptr,   'p' },
@@ -42,8 +44,9 @@ const option ArgumentParser::options[] =
     { "help",                    no_argument,        nullptr,   'h' },
     { 0, 0, 0, 0},
 };
+// clang-format on
 
-ArgumentParser::ArgumentParser(int argc, char * const argv[])
+ArgumentParser::ArgumentParser(int argc, char* const argv[])
 {
     int option;
     int opt_idx = 0;
@@ -54,7 +57,8 @@ ArgumentParser::ArgumentParser(int argc, char * const argv[])
     // already process instructions, optind may not be initialized to point to
     // the beginning of our argv.
     optind = 0;
-    while (-1 != (option = getopt_long(argc, argv, optionStr, options, &opt_idx)))
+    while (-1 !=
+           (option = getopt_long(argc, argv, optionStr, options, &opt_idx)))
     {
         if (option == '?' || option == 'h')
         {
@@ -77,7 +81,8 @@ ArgumentParser::ArgumentParser(int argc, char * const argv[])
     }
 }
 
-const std::vector<std::string>& ArgumentParser::operator[](const std::string& opt)
+const std::vector<std::string>& ArgumentParser::
+    operator[](const std::string& opt)
 {
     auto i = arguments.find(opt);
     if (i == arguments.end())
@@ -90,33 +95,33 @@ const std::vector<std::string>& ArgumentParser::operator[](const std::string& op
     }
 }
 
-void ArgumentParser::usage(char * const argv[])
+void ArgumentParser::usage(char* const argv[])
 {
     std::cerr << "Usage: " << argv[0] << " options\n";
     std::cerr << "Options:\n";
     std::cerr << " --help                                    Print this menu\n";
     std::cerr << " --path=<Dbus Object path>                 Dbus Object path. "
-                     "Ex: /xyz/openbmc_project/state/watchdog/host0\n";
+                 "Ex: /xyz/openbmc_project/state/watchdog/host0\n";
     std::cerr << " --service=<Dbus Service name>             Dbus Service "
-                     "name. Ex: xyz.openbmc_project.State.Watchdog.Host\n";
+                 "name. Ex: xyz.openbmc_project.State.Watchdog.Host\n";
     std::cerr << " [--target=<systemd unit>]                 Systemd unit to "
-                     "be called on timeout for all actions but NONE. "
-                      "Deprecated, use --action_target instead.\n";
+                 "be called on timeout for all actions but NONE. "
+                 "Deprecated, use --action_target instead.\n";
     std::cerr << " [--action_target=<action>=<systemd unit>] Map of action to "
-                     "systemd unit to be called on timeout if that action is "
-                     "set for ExpireAction when the timer expires.\n";
+                 "systemd unit to be called on timeout if that action is "
+                 "set for ExpireAction when the timer expires.\n";
     std::cerr << " [--fallback_action=<action>]              Enables the "
-                     "watchdog even when disabled via the dbus interface. "
-                     "Perform this action when the fallback expires.\n";
+                 "watchdog even when disabled via the dbus interface. "
+                 "Perform this action when the fallback expires.\n";
     std::cerr << " [--fallback_interval=<interval in ms>]    Enables the "
-                     "watchdog even when disabled via the dbus interface. "
-                     "Waits for this interval before performing the fallback "
-                     "action.\n";
+                 "watchdog even when disabled via the dbus interface. "
+                 "Waits for this interval before performing the fallback "
+                 "action.\n";
     std::cerr << " [--fallback_always]                       Enables the "
-                     "watchdog even when disabled by the dbus interface. "
-                     "This option is only valid with a fallback specified.\n";
+                 "watchdog even when disabled by the dbus interface. "
+                 "This option is only valid with a fallback specified.\n";
     std::cerr << " [--continue]                              Continue daemon "
-                     "after watchdog timeout.\n";
+                 "after watchdog timeout.\n";
 }
 } // namespace watchdog
 } // namespace phosphor

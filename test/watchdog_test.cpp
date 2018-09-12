@@ -1,8 +1,8 @@
+#include "watchdog_test.hpp"
+
 #include <chrono>
 #include <memory>
 #include <utility>
-
-#include "watchdog_test.hpp"
 
 using namespace phosphor::watchdog;
 
@@ -10,15 +10,14 @@ seconds WdogTest::waitForWatchdog(seconds timeLimit)
 {
     auto previousTimeRemaining = wdog->timeRemaining();
     auto ret = 0s;
-    while (ret < timeLimit &&
-           previousTimeRemaining >= wdog->timeRemaining() &&
+    while (ret < timeLimit && previousTimeRemaining >= wdog->timeRemaining() &&
            wdog->timerEnabled())
     {
         previousTimeRemaining = wdog->timeRemaining();
 
         // Returns -0- on timeout and positive number on dispatch
         auto sleepTime = 1s;
-        if(!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        if (!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
         {
             ret += sleepTime;
         }
@@ -194,7 +193,8 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     };
     std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
-                    std::move(emptyActionTargets), std::move(fallback));
+                                      std::move(emptyActionTargets),
+                                      std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
@@ -218,7 +218,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     auto newIntervalMs = milliseconds(newInterval).count();
     EXPECT_EQ(newInterval, milliseconds(wdog->interval(newIntervalMs)));
     EXPECT_EQ(Watchdog::Action::None,
-            wdog->expireAction(Watchdog::Action::None));
+              wdog->expireAction(Watchdog::Action::None));
 
     EXPECT_FALSE(wdog->enabled());
     EXPECT_GE(remaining, milliseconds(wdog->timeRemaining()));
@@ -277,7 +277,8 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     };
     std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
-                    std::move(emptyActionTargets), std::move(fallback));
+                                      std::move(emptyActionTargets),
+                                      std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
@@ -331,7 +332,8 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     };
     std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
-                    std::move(emptyActionTargets), std::move(fallback));
+                                      std::move(emptyActionTargets),
+                                      std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     auto remaining = milliseconds(wdog->timeRemaining());
