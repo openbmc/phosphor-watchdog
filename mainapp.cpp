@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "argument.hpp"
 #include "watchdog.hpp"
 
+#include <CLI/CLI.hpp>
 #include <iostream>
 #include <optional>
 #include <phosphor-logging/elog-errors.hpp>
@@ -25,16 +25,8 @@
 #include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
 
-using phosphor::watchdog::ArgumentParser;
 using phosphor::watchdog::Watchdog;
 using sdbusplus::xyz::openbmc_project::State::server::convertForMessage;
-
-static void exitWithError(const char* err, char** argv)
-{
-    ArgumentParser::usage(argv);
-    std::cerr << "ERROR: " << err << "\n";
-    exit(EXIT_FAILURE);
-}
 
 void printActionTargetMap(const Watchdog::ActionTargetMap& actionTargetMap)
 {
@@ -47,74 +39,107 @@ void printActionTargetMap(const Watchdog::ActionTargetMap& actionTargetMap)
     std::cerr << std::flush;
 }
 
+void printFallback(const Watchdog::Fallback& fallback)
+{
+    std::cerr << "Fallback Options:\n";
+    std::cerr << "  Action: " << convertForMessage(fallback.action) << "\n";
+    std::cerr << "  Interval(ms): " << std::dec << fallback.interval << "\n";
+    std::cerr << "  Always re-execute: " << std::boolalpha << fallback.always
+              << "\n";
+    std::cerr << std::flush;
+}
+
 int main(int argc, char* argv[])
 {
     using namespace phosphor::logging;
     using InternalFailure =
         sdbusplus::xyz::openbmc_project::Common::Error::InternalFailure;
-    // Read arguments.
-    auto options = ArgumentParser(argc, argv);
 
-    // Parse out continue argument.
-    auto continueParam = (options)["continue"];
-    // Default it to exit on watchdog timeout
-    auto continueAfterTimeout = false;
-    if (!continueParam.empty())
-    {
-        continueAfterTimeout = true;
-    }
+    CLI::App app{"Canonical openbmc host watchdog daemon"};
 
-    // Parse out path argument.
-    auto pathParam = (options)["path"];
-    if (pathParam.empty())
-    {
-        exitWithError("Path not specified.", argv);
-    }
-    if (pathParam.size() > 1)
-    {
-        exitWithError("Multiple paths specified.", argv);
-    }
-    auto path = pathParam.back();
+    // Service related options
+    const std::string serviceGroup = "Service Options";
+    std::string path;
+    app.add_option("-p,--path", path,
+                   "DBus Object Path. "
+                   "Ex: /xyz/openbmc_project/state/watchdog/host0")
+        ->required()
+        ->group(serviceGroup);
+    std::string service;
+    app.add_option("-s,--service", service,
+                   "DBus Service Name. "
+                   "Ex: xyz.openbmc_project.State.Watchdog.Host")
+        ->required()
+        ->group(serviceGroup);
+    bool continueAfterTimeout;
+    app.add_flag("-c,--continue", continueAfterTimeout,
+                 "Continue daemon after watchdog timeout")
+        ->group(serviceGroup);
 
-    // Parse out service name argument
-    auto serviceParam = (options)["service"];
-    if (serviceParam.empty())
-    {
-        exitWithError("Service not specified.", argv);
-    }
-    if (serviceParam.size() > 1)
-    {
-        exitWithError("Multiple services specified.", argv);
-    }
-    auto service = serviceParam.back();
+    // Target related options
+    const std::string targetGroup = "Target Options";
+    std::optional<std::string> target;
+    app.add_option("-t,--target", target,
+                   "Systemd unit to be called on "
+                   "timeout for all actions but NONE. "
+                   "Deprecated, use --action_target instead.")
+        ->group(targetGroup);
+    std::vector<std::string> actionTargets;
+    app.add_option("-a,--action_target", actionTargets,
+                   "Map of action to "
+                   "systemd unit to be called on timeout if that action is "
+                   "set for ExpireAction when the timer expires.")
+        ->group(targetGroup);
 
-    // Parse out target argument. It is fine if the caller does not
-    // pass this if they are not interested in calling into any target
-    // on meeting a condition.
-    auto targetParam = (options)["target"];
-    if (targetParam.size() > 1)
-    {
-        exitWithError("Multiple targets specified.", argv);
-    }
+    // Fallback related options
+    const std::string fallbackGroup = "Fallback Options";
+    std::optional<std::string> fallbackAction;
+    auto fallbackActionOpt =
+        app.add_option("-f,--fallback_action", fallbackAction,
+                       "Enables the "
+                       "watchdog even when disabled via the dbus interface. "
+                       "Perform this action when the fallback expires.")
+            ->group(fallbackGroup);
+    std::optional<unsigned> fallbackIntervalMs;
+    auto fallbackIntervalOpt =
+        app.add_option("-i,--fallback_interval", fallbackIntervalMs,
+                       "Enables the "
+                       "watchdog even when disabled via the dbus interface. "
+                       "Waits for this interval before performing the fallback "
+                       "action.")
+            ->group(fallbackGroup);
+    fallbackIntervalOpt->needs(fallbackActionOpt);
+    fallbackActionOpt->needs(fallbackIntervalOpt);
+    bool fallbackAlways;
+    app.add_flag("-e,--fallback_always", fallbackAlways,
+                 "Enables the "
+                 "watchdog even when disabled by the dbus interface. "
+                 "This option is only valid with a fallback specified")
+        ->group(fallbackGroup)
+        ->needs(fallbackActionOpt)
+        ->needs(fallbackIntervalOpt);
+
+    CLI11_PARSE(app, argc, argv);
+
+    // Put together a list of actions and associated systemd targets
+    // The new --action_target options take precedence over the legacy
+    // --target
     Watchdog::ActionTargetMap actionTargetMap;
-    if (!targetParam.empty())
+    if (target)
     {
-        auto target = targetParam.back();
-        actionTargetMap[Watchdog::Action::HardReset] = target;
-        actionTargetMap[Watchdog::Action::PowerOff] = target;
-        actionTargetMap[Watchdog::Action::PowerCycle] = target;
+        actionTargetMap[Watchdog::Action::HardReset] = *target;
+        actionTargetMap[Watchdog::Action::PowerOff] = *target;
+        actionTargetMap[Watchdog::Action::PowerCycle] = *target;
     }
-
-    // Parse out the action_target arguments. We allow one target to map
-    // to an action. These targets can replace the target specified above.
-    for (const auto& actionTarget : (options)["action_target"])
+    for (const auto& actionTarget : actionTargets)
     {
         size_t keyValueSplit = actionTarget.find("=");
         if (keyValueSplit == std::string::npos)
         {
-            exitWithError(
-                "Invalid action_target format, expect <action>=<target>.",
-                argv);
+            std::cerr << "Invalid action_target format, "
+                         "expect <action>=<target>."
+                      << std::endl;
+            return 1;
         }
 
         std::string key = actionTarget.substr(0, keyValueSplit);
@@ -128,72 +153,42 @@ int main(int argc, char* argv[])
         }
         catch (const sdbusplus::exception::InvalidEnumString&)
         {
-            exitWithError("Bad action specified.", argv);
+            std::cerr << "Bad action specified: " << key << std::endl;
+            return 1;
         }
 
         // Detect duplicate action target arguments
         if (actionTargetMap.find(action) != actionTargetMap.end())
         {
-            exitWithError("Duplicate action specified", argv);
+            std::cerr << "Got duplicate action: " << key << std::endl;
+            return 1;
         }
 
         actionTargetMap[action] = std::move(value);
     }
     printActionTargetMap(actionTargetMap);
 
-    // Parse out the fallback settings for the watchdog. Note that we require
-    // both of the fallback arguments to do anything here, but having a fallback
-    // is entirely optional.
-    auto fallbackActionParam = (options)["fallback_action"];
-    auto fallbackIntervalParam = (options)["fallback_interval"];
-    if (fallbackActionParam.empty() ^ fallbackIntervalParam.empty())
+    // Build the fallback option used for the Watchdog
+    std::optional<Watchdog::Fallback> maybeFallback;
+    if (fallbackAction)
     {
-        exitWithError("Only one of the fallback options was specified.", argv);
-    }
-    if (fallbackActionParam.size() > 1 || fallbackIntervalParam.size() > 1)
-    {
-        exitWithError("Multiple fallbacks specified.", argv);
-    }
-    std::optional<Watchdog::Fallback> fallback;
-    if (!fallbackActionParam.empty())
-    {
-        Watchdog::Action action;
+        Watchdog::Fallback fallback;
         try
         {
-            action =
-                Watchdog::convertActionFromString(fallbackActionParam.back());
+            fallback.action =
+                Watchdog::convertActionFromString(*fallbackAction);
         }
         catch (const sdbusplus::exception::InvalidEnumString&)
         {
-            exitWithError("Bad action specified.", argv);
+            std::cerr << "Bad fallback action specified: " << *fallbackAction
+                      << std::endl;
+            return 1;
         }
-        uint64_t interval;
-        try
-        {
-            interval = std::stoull(fallbackIntervalParam.back());
-        }
-        catch (const std::logic_error&)
-        {
-            exitWithError("Failed to convert fallback interval to integer.",
-                          argv);
-        }
-        fallback = Watchdog::Fallback{
-            .action = action,
-            .interval = interval,
-            .always = false,
-        };
-    }
+        fallback.interval = *fallbackIntervalMs;
+        fallback.always = fallbackAlways;
 
-    auto fallbackAlwaysParam = (options)["fallback_always"];
-    if (!fallbackAlwaysParam.empty())
-    {
-        if (!fallback)
-        {
-            exitWithError("Specified the fallback should always be enabled but "
-                          "no fallback provided.",
-                          argv);
-        }
-        fallback->always = true;
+        printFallback(fallback);
+        maybeFallback = std::move(fallback);
     }
 
     try
@@ -212,7 +207,7 @@ int main(int argc, char* argv[])
 
         // Create a watchdog object
         Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
-                          std::move(fallback));
+                          std::move(maybeFallback));
 
         // Claim the bus
         bus.request_name(service.c_str());
