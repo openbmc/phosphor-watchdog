@@ -47,18 +47,10 @@ bool Watchdog::enabled(bool value)
     }
     else if (!this->enabled())
     {
-        // Start ONESHOT timer. Timer handles all in usec
-        auto usec = duration_cast<microseconds>(milliseconds(this->interval()));
-
-        // Update new expiration
-        timer.clearExpired();
-        timer.start(usec);
-
-        // Enable timer
-        timer.setEnabled<std::true_type>();
-
+        auto interval_ms = this->interval();
+        timer.restart(milliseconds(interval_ms));
         log<level::INFO>("watchdog: enabled and started",
-                         entry("INTERVAL=%llu", this->interval()));
+                         entry("INTERVAL=%llu", interval_ms));
     }
 
     return WatchdogInherits::enabled(value);
@@ -68,22 +60,13 @@ bool Watchdog::enabled(bool value)
 // If the timer is disabled, returns 0
 uint64_t Watchdog::timeRemaining() const
 {
-    uint64_t timeRemain = 0;
-
     // timer may have already expired and disabled
-    if (timerEnabled())
+    if (!timerEnabled())
     {
-        // the one-shot timer does not expire yet
-        auto expiry = duration_cast<milliseconds>(timer.getRemaining());
-
-        // convert to msec per interface expectation.
-        auto timeNow = duration_cast<milliseconds>(Timer::getCurrentTime());
-
-        // Its possible that timer may have expired by now.
-        // So need to cross verify.
-        timeRemain = (expiry > timeNow) ? (expiry - timeNow).count() : 0;
+        return 0;
     }
-    return timeRemain;
+
+    return duration_cast<milliseconds>(timer.getRemaining()).count();
 }
 
 // Reset the timer to a new expiration value
@@ -103,8 +86,7 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
     }
 
     // Update new expiration
-    auto usec = duration_cast<microseconds>(milliseconds(value));
-    timer.start(usec);
+    timer.setRemaining(milliseconds(value));
 
     // Update Base class data.
     return WatchdogInherits::timeRemaining(value);
@@ -159,19 +141,13 @@ void Watchdog::tryFallbackOrDisable()
     if (fallback && (fallback->always || this->enabled()))
     {
         auto interval_ms = fallback->interval;
-        auto interval_us =
-            duration_cast<microseconds>(milliseconds(interval_ms));
-
-        timer.clearExpired();
-        timer.start(interval_us);
-        timer.setEnabled<std::true_type>();
-
+        timer.restart(milliseconds(interval_ms));
         log<level::INFO>("watchdog: falling back",
                          entry("INTERVAL=%llu", interval_ms));
     }
     else if (timerEnabled())
     {
-        timer.setEnabled<std::false_type>();
+        timer.setEnabled(false);
 
         log<level::INFO>("watchdog: disabled");
     }
