@@ -2,12 +2,14 @@
 
 #include "timer.hpp"
 
-#include <systemd/sd-event.h>
-
-#include <experimental/optional>
+#include <functional>
+#include <map>
+#include <optional>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/server/object.hpp>
+#include <utility>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
+
 namespace phosphor
 {
 namespace watchdog
@@ -54,8 +56,7 @@ class Watchdog : public WatchdogInherits
     Watchdog(sdbusplus::bus::bus& bus, const char* objPath, EventPtr& event,
              std::map<Action, TargetName>&& actionTargets =
                  std::map<Action, TargetName>(),
-             std::experimental::optional<Fallback>&& fallback =
-                 std::experimental::nullopt) :
+             std::optional<Fallback>&& fallback = std::nullopt) :
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargets(std::move(actionTargets)),
         fallback(std::move(fallback)),
@@ -129,7 +130,7 @@ class Watchdog : public WatchdogInherits
     std::map<Action, TargetName> actionTargets;
 
     /** @brief Fallback timer options */
-    std::experimental::optional<Fallback> fallback;
+    std::optional<Fallback> fallback;
 
     /** @brief Contained timer object */
     Timer timer;

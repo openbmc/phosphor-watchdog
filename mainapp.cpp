@@ -17,8 +17,8 @@
 #include "argument.hpp"
 #include "watchdog.hpp"
 
-#include <experimental/optional>
 #include <iostream>
+#include <optional>
 #include <phosphor-logging/elog-errors.hpp>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     {
         exitWithError("Multiple fallbacks specified.", argv);
     }
-    std::experimental::optional<Watchdog::Fallback> fallback;
+    std::optional<Watchdog::Fallback> fallback;
     if (!fallbackActionParam.empty())
     {
         Watchdog::Action action;
