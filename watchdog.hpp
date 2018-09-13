@@ -1,14 +1,11 @@
 #pragma once
 
-#include <chrono>
 #include <functional>
 #include <optional>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/server/object.hpp>
-#include <sdeventplus/clock.hpp>
 #include <sdeventplus/event.hpp>
-#include <sdeventplus/source/base.hpp>
-#include <sdeventplus/source/time.hpp>
+#include <sdeventplus/utility/timer.hpp>
 #include <unordered_map>
 #include <utility>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
@@ -68,10 +65,8 @@ class Watchdog : public WatchdogInherits
              std::optional<Fallback>&& fallback = std::nullopt) :
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargetMap(std::move(actionTargetMap)),
-        fallback(std::move(fallback)), expired(false), clock(event),
-        timer(event, clock.now(), std::chrono::milliseconds(1),
-              std::bind(&Watchdog::timeOutHandler, this, std::placeholders::_1,
-                        std::placeholders::_2))
+        fallback(std::move(fallback)),
+        timer(event, std::bind(&Watchdog::timeOutHandler, this))
     {
         // We need to poke the enable mechanism to make sure that the timer
         // enters the fallback state if the fallback is always enabled.
@@ -124,23 +119,16 @@ class Watchdog : public WatchdogInherits
     /** @brief Tells if the referenced timer is expired or not */
     inline auto timerExpired() const
     {
-        return expired;
+        return timer.hasExpired();
     }
 
     /** @brief Tells if the timer is running or not */
     inline bool timerEnabled() const
     {
-        return timer.get_enabled() != sdeventplus::source::Enabled::Off;
+        return timer.isEnabled();
     }
 
   private:
-    /** @brief Types used for the timer object
-     */
-    static constexpr sdeventplus::ClockId clockId =
-        sdeventplus::ClockId::Monotonic;
-    using Clock = sdeventplus::Clock<clockId>;
-    using Time = sdeventplus::source::Time<clockId>;
-
     /** @brief sdbusplus handle */
     sdbusplus::bus::bus& bus;
 
@@ -150,17 +138,11 @@ class Watchdog : public WatchdogInherits
     /** @brief Fallback timer options */
     std::optional<Fallback> fallback;
 
-    /** @brief Has our watchdog expired since being enabled? */
-    bool expired;
-
-    /** @brief Time source for timer configuration */
-    Clock clock;
-
     /** @brief Contained timer object */
-    Time timer;
+    sdeventplus::utility::Timer<sdeventplus::ClockId::Monotonic> timer;
 
     /** @brief Optional Callback handler on timer expirartion */
-    void timeOutHandler(Time& source, Time::TimePoint time);
+    void timeOutHandler();
 
     /** @brief Attempt to enter the fallback watchdog or disables it */
     void tryFallbackOrDisable();

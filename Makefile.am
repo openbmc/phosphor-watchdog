@@ -3,7 +3,6 @@ sbin_PROGRAMS = phosphor-watchdog
 noinst_HEADERS = watchdog.hpp
 
 phosphor_watchdog_SOURCES =  \
-                argument.cpp \
                 watchdog.cpp \
                 mainapp.cpp
 

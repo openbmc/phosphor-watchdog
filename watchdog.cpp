@@ -40,15 +40,10 @@ bool Watchdog::enabled(bool value)
     }
     else if (!this->enabled())
     {
-        // Update new expiration
-        expired = false;
-        timer.set_time(clock.now() + milliseconds(this->interval()));
-
-        // Enable timer
-        timer.set_enabled(sdeventplus::source::Enabled::OneShot);
-
+        auto interval_ms = this->interval();
+        timer.restart(milliseconds(interval_ms));
         log<level::INFO>("watchdog: enabled and started",
-                         entry("INTERVAL=%llu", this->interval()));
+                         entry("INTERVAL=%llu", interval_ms));
     }
 
     return WatchdogInherits::enabled(value);
@@ -64,16 +59,7 @@ uint64_t Watchdog::timeRemaining() const
         return 0;
     }
 
-    auto expiry = timer.get_time();
-    auto timeNow = clock.now();
-
-    // Ensure we can't return a bogus negative result
-    if (expiry < timeNow)
-    {
-        return 0;
-    }
-
-    return duration_cast<milliseconds>(expiry - timeNow).count();
+    return duration_cast<milliseconds>(timer.getRemaining()).count();
 }
 
 // Reset the timer to a new expiration value
@@ -93,17 +79,15 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
     }
 
     // Update new expiration
-    timer.set_time(clock.now() + milliseconds(value));
+    timer.setRemaining(milliseconds(value));
 
     // Update Base class data.
     return WatchdogInherits::timeRemaining(value);
 }
 
 // Optional callback function on timer expiration
-void Watchdog::timeOutHandler(Time& source, Time::TimePoint time)
+void Watchdog::timeOutHandler()
 {
-    expired = true;
-
     Action action = expireAction();
     if (!this->enabled())
     {
@@ -139,17 +123,13 @@ void Watchdog::tryFallbackOrDisable()
     if (fallback && (fallback->always || this->enabled()))
     {
         auto interval_ms = fallback->interval;
-
-        expired = false;
-        timer.set_time(clock.now() + milliseconds(interval_ms));
-        timer.set_enabled(sdeventplus::source::Enabled::OneShot);
-
+        timer.restart(milliseconds(interval_ms));
         log<level::INFO>("watchdog: falling back",
                          entry("INTERVAL=%llu", interval_ms));
     }
     else if (timerEnabled())
     {
-        timer.set_enabled(sdeventplus::source::Enabled::Off);
+        timer.setEnabled(false);
 
         log<level::INFO>("watchdog: disabled");
     }
