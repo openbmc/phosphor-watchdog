@@ -1,11 +1,11 @@
 #pragma once
 
-#include "timer.hpp"
-
 #include <functional>
 #include <optional>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/server/object.hpp>
+#include <sdeventplus/event.hpp>
+#include <sdeventplus/utility/timer.hpp>
 #include <unordered_map>
 #include <utility>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
@@ -53,13 +53,14 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Constructs the Watchdog object
      *
-     *  @param[in] bus             - DBus bus to attach to.
-     *  @param[in] objPath         - Object path to attach to.
-     *  @param[in] event           - reference to sd_event unique pointer
-     *  @param[in] actionTargetMap - map of systemd targets called on timeout
+     *  @param[in] bus            - DBus bus to attach to.
+     *  @param[in] objPath        - Object path to attach to.
+     *  @param[in] event          - reference to sdeventplus::Event loop
+     *  @param[in] actionTargets  - map of systemd targets called on timeout
      *  @param[in] fallback
      */
-    Watchdog(sdbusplus::bus::bus& bus, const char* objPath, EventPtr& event,
+    Watchdog(sdbusplus::bus::bus& bus, const char* objPath,
+             const sdeventplus::Event& event,
              ActionTargetMap&& actionTargetMap = {},
              std::optional<Fallback>&& fallback = std::nullopt) :
         WatchdogInherits(bus, objPath),
@@ -118,13 +119,13 @@ class Watchdog : public WatchdogInherits
     /** @brief Tells if the referenced timer is expired or not */
     inline auto timerExpired() const
     {
-        return timer.expired();
+        return timer.hasExpired();
     }
 
     /** @brief Tells if the timer is running or not */
     inline bool timerEnabled() const
     {
-        return timer.getEnabled() != SD_EVENT_OFF;
+        return timer.isEnabled();
     }
 
   private:
@@ -138,7 +139,7 @@ class Watchdog : public WatchdogInherits
     std::optional<Fallback> fallback;
 
     /** @brief Contained timer object */
-    Timer timer;
+    sdeventplus::utility::Timer<sdeventplus::ClockId::Monotonic> timer;
 
     /** @brief Optional Callback handler on timer expirartion */
     void timeOutHandler();
