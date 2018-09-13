@@ -191,9 +191,8 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
         .action = Watchdog::Action::PowerOff,
         .interval = static_cast<uint64_t>(fallbackIntervalMs),
     };
-    std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
-                                      std::move(emptyActionTargets),
+                                      Watchdog::ActionTargetMap(),
                                       std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
@@ -275,9 +274,8 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
         .interval = static_cast<uint64_t>(fallbackIntervalMs),
         .always = false,
     };
-    std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
-                                      std::move(emptyActionTargets),
+                                      Watchdog::ActionTargetMap(),
                                       std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
@@ -330,9 +328,8 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
         .interval = static_cast<uint64_t>(fallbackIntervalMs),
         .always = true,
     };
-    std::map<Watchdog::Action, Watchdog::TargetName> emptyActionTargets;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
-                                      std::move(emptyActionTargets),
+                                      Watchdog::ActionTargetMap(),
                                       std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
