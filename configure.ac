@@ -31,6 +31,11 @@ PKG_CHECK_MODULES([GTEST_MAIN], [gtest_main], [],
         AC_SUBST(GTEST_MAIN_LIBS)
     ])
 
+# We need the header only CLI library
+AC_CHECK_HEADERS([CLI/CLI.hpp], [], [
+    AC_MSG_ERROR([Could not find CLI11 CLI/CLI.hpp])
+])
+
 AC_ARG_ENABLE([oe-sdk],
     AS_HELP_STRING([--enable-oe-sdk], [Link testcases absolutely against OE SDK so they can be ran within it.])
 )
