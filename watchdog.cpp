@@ -112,8 +112,8 @@ void Watchdog::timeOutHandler()
         action = fallback->action;
     }
 
-    auto target = actionTargets.find(action);
-    if (target == actionTargets.end())
+    auto target = actionTargetMap.find(action);
+    if (target == actionTargetMap.end())
     {
         log<level::INFO>("watchdog: Timed out with no target",
                          entry("ACTION=%s", convertForMessage(action).c_str()));

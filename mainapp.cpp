@@ -36,19 +36,18 @@ static void exitWithError(const char* err, char** argv)
     exit(EXIT_FAILURE);
 }
 
-void printActionTargets(
-    const std::map<Watchdog::Action, std::string>& actionTargets)
+void printActionTargetMap(const Watchdog::ActionTargetMap& actionTargetMap)
 {
     std::cerr << "Action Targets:\n";
-    for (const auto& actionTarget : actionTargets)
+    for (const auto& [action, target] : actionTargetMap)
     {
-        std::cerr << "  " << convertForMessage(actionTarget.first) << " -> "
-                  << actionTarget.second << "\n";
+        std::cerr << "  " << convertForMessage(action) << " -> " << target
+                  << "\n";
     }
     std::cerr << std::flush;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
     using namespace phosphor::logging;
     using InternalFailure =
@@ -97,13 +96,13 @@ int main(int argc, char** argv)
     {
         exitWithError("Multiple targets specified.", argv);
     }
-    std::map<Watchdog::Action, Watchdog::TargetName> actionTargets;
+    Watchdog::ActionTargetMap actionTargetMap;
     if (!targetParam.empty())
     {
         auto target = targetParam.back();
-        actionTargets[Watchdog::Action::HardReset] = target;
-        actionTargets[Watchdog::Action::PowerOff] = target;
-        actionTargets[Watchdog::Action::PowerCycle] = target;
+        actionTargetMap[Watchdog::Action::HardReset] = target;
+        actionTargetMap[Watchdog::Action::PowerOff] = target;
+        actionTargetMap[Watchdog::Action::PowerCycle] = target;
     }
 
     // Parse out the action_target arguments. We allow one target to map
@@ -132,9 +131,9 @@ int main(int argc, char** argv)
             exitWithError("Bad action specified.", argv);
         }
 
-        actionTargets[action] = std::move(value);
+        actionTargetMap[action] = std::move(value);
     }
-    printActionTargets(actionTargets);
+    printActionTargetMap(actionTargetMap);
 
     // Parse out the fallback settings for the watchdog. Note that we require
     // both of the fallback arguments to do anything here, but having a fallback
@@ -213,7 +212,7 @@ int main(int argc, char** argv)
     try
     {
         // Create a watchdog object
-        Watchdog watchdog(bus, path.c_str(), eventP, std::move(actionTargets),
+        Watchdog watchdog(bus, path.c_str(), eventP, std::move(actionTargetMap),
                           std::move(fallback));
 
         // Claim the bus
