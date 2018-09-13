@@ -1,7 +1,7 @@
 #include "watchdog_test.hpp"
 
-#include <chrono>
 #include <memory>
+#include <thread>
 #include <utility>
 
 using namespace phosphor::watchdog;
@@ -15,9 +15,8 @@ seconds WdogTest::waitForWatchdog(seconds timeLimit)
     {
         previousTimeRemaining = wdog->timeRemaining();
 
-        // Returns -0- on timeout and positive number on dispatch
-        auto sleepTime = 1s;
-        if (!sd_event_run(eventP.get(), microseconds(sleepTime).count()))
+        constexpr auto sleepTime = 1s;
+        if (event.run(sleepTime) == 0)
         {
             ret += sleepTime;
         }
@@ -128,6 +127,10 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     // Sleep for 1 second
     std::this_thread::sleep_for(1s);
 
+    // Timer should still be running unexpired
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
+
     // Next timer will expire in 5 seconds from now.
     auto expireTime = 5s;
     auto expireTimeMs = milliseconds(expireTime).count();
@@ -137,9 +140,6 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
     EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
-
-    // Make sure secondary callback was not called.
-    EXPECT_FALSE(expired);
 }
 
 /** @brief Make sure the Interval can be updated directly.
@@ -218,7 +218,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
         .action = Watchdog::Action::PowerOff,
         .interval = static_cast<uint64_t>(fallbackIntervalMs),
     };
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
@@ -301,7 +301,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
         .interval = static_cast<uint64_t>(fallbackIntervalMs),
         .always = false,
     };
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
@@ -355,7 +355,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
         .interval = static_cast<uint64_t>(fallbackIntervalMs),
         .always = true,
     };
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, eventP,
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
