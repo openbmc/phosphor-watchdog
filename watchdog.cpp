@@ -40,15 +40,12 @@ bool Watchdog::enabled(bool value)
     }
     else if (!this->enabled())
     {
-        // Start ONESHOT timer. Timer handles all in usec
-        auto usec = duration_cast<microseconds>(milliseconds(this->interval()));
-
         // Update new expiration
-        timer.clearExpired();
-        timer.start(usec);
+        expired = false;
+        timer.set_time(clock.now() + milliseconds(this->interval()));
 
         // Enable timer
-        timer.setEnabled<std::true_type>();
+        timer.set_enabled(sdeventplus::source::Enabled::OneShot);
 
         log<level::INFO>("watchdog: enabled and started",
                          entry("INTERVAL=%llu", this->interval()));
@@ -61,22 +58,22 @@ bool Watchdog::enabled(bool value)
 // If the timer is disabled, returns 0
 uint64_t Watchdog::timeRemaining() const
 {
-    uint64_t timeRemain = 0;
-
     // timer may have already expired and disabled
-    if (timerEnabled())
+    if (!timerEnabled())
     {
-        // the one-shot timer does not expire yet
-        auto expiry = duration_cast<milliseconds>(timer.getRemaining());
-
-        // convert to msec per interface expectation.
-        auto timeNow = duration_cast<milliseconds>(Timer::getCurrentTime());
-
-        // Its possible that timer may have expired by now.
-        // So need to cross verify.
-        timeRemain = (expiry > timeNow) ? (expiry - timeNow).count() : 0;
+        return 0;
     }
-    return timeRemain;
+
+    auto expiry = timer.get_time();
+    auto timeNow = clock.now();
+
+    // Ensure we can't return a bogus negative result
+    if (expiry < timeNow)
+    {
+        return 0;
+    }
+
+    return duration_cast<milliseconds>(expiry - timeNow).count();
 }
 
 // Reset the timer to a new expiration value
@@ -96,16 +93,17 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
     }
 
     // Update new expiration
-    auto usec = duration_cast<microseconds>(milliseconds(value));
-    timer.start(usec);
+    timer.set_time(clock.now() + milliseconds(value));
 
     // Update Base class data.
     return WatchdogInherits::timeRemaining(value);
 }
 
 // Optional callback function on timer expiration
-void Watchdog::timeOutHandler()
+void Watchdog::timeOutHandler(Time& source, Time::TimePoint time)
 {
+    expired = true;
+
     Action action = expireAction();
     if (!this->enabled())
     {
@@ -141,19 +139,17 @@ void Watchdog::tryFallbackOrDisable()
     if (fallback && (fallback->always || this->enabled()))
     {
         auto interval_ms = fallback->interval;
-        auto interval_us =
-            duration_cast<microseconds>(milliseconds(interval_ms));
 
-        timer.clearExpired();
-        timer.start(interval_us);
-        timer.setEnabled<std::true_type>();
+        expired = false;
+        timer.set_time(clock.now() + milliseconds(interval_ms));
+        timer.set_enabled(sdeventplus::source::Enabled::OneShot);
 
         log<level::INFO>("watchdog: falling back",
                          entry("INTERVAL=%llu", interval_ms));
     }
     else if (timerEnabled())
     {
-        timer.setEnabled<std::false_type>();
+        timer.set_enabled(sdeventplus::source::Enabled::Off);
 
         log<level::INFO>("watchdog: disabled");
     }

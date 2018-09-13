@@ -1,29 +1,32 @@
 #include <chrono>
 #include <memory>
-#include <timer_test.hpp>
+#include <sdbusplus/bus.hpp>
+#include <sdeventplus/event.hpp>
 #include <watchdog.hpp>
+
+#include <gtest/gtest.h>
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
 // Test Watchdog functionality
-class WdogTest : public TimerTest
+class WdogTest : public ::testing::Test
 {
   public:
     // Gets called as part of each TEST_F construction
     WdogTest() :
+        event(sdeventplus::Event::get_default()),
         bus(sdbusplus::bus::new_default()),
         wdog(std::make_unique<phosphor::watchdog::Watchdog>(bus, TEST_PATH,
-                                                            eventP)),
+                                                            event)),
         defaultInterval(milliseconds(wdog->interval())), defaultDrift(30)
     {
-        // Check for successful creation of
-        // event handler and bus handler
-        EXPECT_GE(rc, 0);
-
         // Initially the watchdog would be disabled
         EXPECT_FALSE(wdog->enabled());
     }
+
+    // sdevent Event handle
+    sdeventplus::Event event;
 
     // sdbusplus handle
     sdbusplus::bus::bus bus;

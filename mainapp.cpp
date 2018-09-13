@@ -196,29 +196,22 @@ int main(int argc, char* argv[])
         fallback->always = true;
     }
 
-    sd_event* event = nullptr;
-    auto r = sd_event_default(&event);
-    if (r < 0)
-    {
-        log<level::ERR>("Error creating a default sd_event handler");
-        return r;
-    }
-    phosphor::watchdog::EventPtr eventP{event};
-    event = nullptr;
-
-    // Get a handle to system dbus.
-    auto bus = sdbusplus::bus::new_default();
-
-    // Add systemd object manager.
-    sdbusplus::server::manager::manager(bus, path.c_str());
-
-    // Attach the bus to sd_event to service user requests
-    bus.attach_event(eventP.get(), SD_EVENT_PRIORITY_NORMAL);
-
     try
     {
+        // Get a default event loop
+        auto event = sdeventplus::Event::get_default();
+
+        // Get a handle to system dbus.
+        auto bus = sdbusplus::bus::new_default();
+
+        // Add systemd object manager.
+        sdbusplus::server::manager::manager(bus, path.c_str());
+
+        // Attach the bus to sd_event to service user requests
+        bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+
         // Create a watchdog object
-        Watchdog watchdog(bus, path.c_str(), eventP, std::move(actionTargetMap),
+        Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
                           std::move(fallback));
 
         // Claim the bus
@@ -227,13 +220,8 @@ int main(int argc, char* argv[])
         // Loop until our timer expires and we don't want to continue
         while (continueAfterTimeout || !watchdog.timerExpired())
         {
-            // -1 denotes wait for ever
-            r = sd_event_run(eventP.get(), (uint64_t)-1);
-            if (r < 0)
-            {
-                log<level::ERR>("Error waiting for events");
-                elog<InternalFailure>();
-            }
+            // Run and never timeout
+            event.run(std::nullopt);
         }
     }
     catch (InternalFailure& e)
