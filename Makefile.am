@@ -1,21 +1,19 @@
 sbin_PROGRAMS = phosphor-watchdog
 
-noinst_HEADERS = timer.hpp \
-                 watchdog.hpp
+noinst_HEADERS = watchdog.hpp
 
 phosphor_watchdog_SOURCES =  \
                 argument.cpp \
-                timer.cpp    \
                 watchdog.cpp \
                 mainapp.cpp
 
-phosphor_watchdog_LDFLAGS = $(SYSTEMD_LIBS) \
-                            ${PHOSPHOR_LOGGING_LIBS} \
+phosphor_watchdog_LDFLAGS = ${PHOSPHOR_LOGGING_LIBS} \
                             ${SDBUSPLUS_LIBS} \
+                            ${SDEVENTPLUS_LIBS} \
                             ${PHOSPHOR_DBUS_INTERFACES_LIBS}
 
-phosphor_watchdog_CXXFLAGS = $(SYSTEMD_CFLAGS)\
-                             ${PHOSPHOR_LOGGING_CFLAGS} \
+phosphor_watchdog_CXXFLAGS = ${PHOSPHOR_LOGGING_CFLAGS} \
                              ${SDBUSPLUS_CFLAGS} \
+                             ${SDEVENTPLUS_CFLAGS} \
                              ${PHOSPHOR_DBUS_INTERFACES_CFLAGS}
 SUBDIRS = test
