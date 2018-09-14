@@ -131,6 +131,12 @@ int main(int argc, char* argv[])
             exitWithError("Bad action specified.", argv);
         }
 
+        // Detect duplicate action target arguments
+        if (actionTargetMap.find(action) != actionTargetMap.end())
+        {
+            exitWithError("Duplicate action specified", argv);
+        }
+
         actionTargetMap[action] = std::move(value);
     }
     printActionTargetMap(actionTargetMap);
