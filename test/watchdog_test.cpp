@@ -154,6 +154,33 @@ TEST_F(WdogTest, verifyIntervalUpdateReceived)
     EXPECT_EQ(expireTimeMs, wdog->interval());
 }
 
+/** @brief Make sure the Interval can be updated while the timer is running.
+ */
+TEST_F(WdogTest, verifyIntervalUpdateRunning)
+{
+    const auto oldInterval = milliseconds(wdog->interval());
+    const auto newInterval = 5s;
+
+    EXPECT_TRUE(wdog->enabled(true));
+    auto remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(oldInterval, remaining);
+    EXPECT_LE(oldInterval - defaultDrift, remaining);
+    EXPECT_EQ(newInterval,
+              milliseconds(wdog->interval(milliseconds(newInterval).count())));
+
+    // Expect only the interval to update
+    remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(oldInterval, remaining);
+    EXPECT_LE(oldInterval - defaultDrift, remaining);
+    EXPECT_EQ(newInterval, milliseconds(wdog->interval()));
+
+    // Expect reset to use the new interval
+    wdog->resetTimeRemaining(false);
+    remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(newInterval, remaining);
+    EXPECT_LE(newInterval - defaultDrift, remaining);
+}
+
 /** @brief Make sure that watchdog is started and enabled.
  *         Wait default interval seconds and make sure that wdog has died
  */
