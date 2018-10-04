@@ -1,7 +1,11 @@
 #include "watchdog.hpp"
 
 #include <chrono>
+#include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
+#include <sdbusplus/exception.hpp>
+#include <xyz/openbmc_project/Common/error.hpp>
+
 namespace phosphor
 {
 namespace watchdog
@@ -9,6 +13,9 @@ namespace watchdog
 using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace phosphor::logging;
+
+using sdbusplus::exception::SdBusError;
+using sdbusplus::xyz::openbmc_project::Common::Error::InternalFailure;
 
 // systemd service to kick start a target.
 constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
@@ -120,15 +127,26 @@ void Watchdog::timeOutHandler()
     }
     else
     {
-        auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
-                                          SYSTEMD_INTERFACE, "StartUnit");
-        method.append(target->second);
-        method.append("replace");
-
         log<level::INFO>("watchdog: Timed out",
                          entry("ACTION=%s", convertForMessage(action).c_str()),
                          entry("TARGET=%s", target->second.c_str()));
-        bus.call_noreply(method);
+
+        try
+        {
+            auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
+                                              SYSTEMD_INTERFACE, "StartUnit");
+            method.append(target->second);
+            method.append("replace");
+
+            bus.call_noreply(method);
+        }
+        catch (const SdBusError& e)
+        {
+            log<level::ERR>("watchdog: Failed to start unit",
+                            entry("TARGET=%s", target->second.c_str()),
+                            entry("ERROR=%s", e.what()));
+            commit<InternalFailure>();
+        }
     }
 
     tryFallbackOrDisable();
