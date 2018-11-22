@@ -19,23 +19,50 @@ AX_APPEND_COMPILE_FLAGS([-Wall -Werror], [CXXFLAGS])
 LT_INIT
 
 # Check for needed modules
-PKG_CHECK_MODULES([PHOSPHOR_LOGGING], [phosphor-logging], [], [AC_MSG_ERROR([Could not find phosphor-logging...openbmc/phosphor-logging package required])])
-PKG_CHECK_MODULES([SDBUSPLUS], [sdbusplus],, [AC_MSG_ERROR([Could not find sdbusplus...openbmc/sdbusplus package required])])
-PKG_CHECK_MODULES([SDEVENTPLUS], [sdeventplus],, [AC_MSG_ERROR([Could not find sdeventplus...openbmc/sdeventplus package required])])
-PKG_CHECK_MODULES([PHOSPHOR_DBUS_INTERFACES], [phosphor-dbus-interfaces], [], [AC_MSG_ERROR([Could not find phosphor-dbus-interfaces...openbmc/phosphor-dbus-interfaces package required])])
+PKG_CHECK_MODULES(
+    [PHOSPHOR_LOGGING],
+    [phosphor-logging],
+    [],
+    [AC_MSG_ERROR([Could not find required openbmc/phosphor-logging])]
+)
+PKG_CHECK_MODULES(
+    [SDBUSPLUS],
+    [sdbusplus],
+    [],
+    [AC_MSG_ERROR([Could not find required openbmc/sdbusplus])]
+)
+PKG_CHECK_MODULES(
+    [SDEVENTPLUS],
+    [sdeventplus],
+    [],
+    [AC_MSG_ERROR([Could not find required openbmc/sdeventplus])]
+)
+PKG_CHECK_MODULES(
+    [PHOSPHOR_DBUS_INTERFACES],
+    [phosphor-dbus-interfaces],
+    [],
+    [AC_MSG_ERROR([Could not find required openbmc/phosphor-dbus-interfaces])]
+)
 PKG_CHECK_MODULES([GTEST_MAIN], [gtest_main], [],
     [
-        AX_PTHREAD([GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=1"],[GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=0"])
+        AX_PTHREAD(
+            [GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=1"],
+            [GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=0"]
+        )
         [GTEST_MAIN_LIBS="-lgtest_main -lgtest"]
         AC_SUBST(GTEST_MAIN_CFLAGS)
         AC_SUBST(GTEST_MAIN_LIBS)
     ])
 
 AC_ARG_ENABLE([oe-sdk],
-    AS_HELP_STRING([--enable-oe-sdk], [Link testcases absolutely against OE SDK so they can be ran within it.])
+    AS_HELP_STRING(
+        [--enable-oe-sdk],
+        [Link testcases absolutely against OE SDK so they can be ran within it.]
+    )
 )
 AC_ARG_VAR(OECORE_TARGET_SYSROOT,
-    [Path to the OE SDK SYSROOT])
+    [Path to the OE SDK SYSROOT]
+)
 AS_IF([test "x$enable_oe_sdk" == "xyes"],
     AS_IF([test "x$OECORE_TARGET_SYSROOT" == "x"],
           AC_MSG_ERROR([OECORE_TARGET_SYSROOT must be set with --enable-oe-sdk])
