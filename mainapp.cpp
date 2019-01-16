@@ -22,6 +22,10 @@
 #include <phosphor-logging/elog-errors.hpp>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
+#include <sdbusplus/bus.hpp>
+#include <sdbusplus/exception.hpp>
+#include <sdbusplus/server/manager.hpp>
+#include <sdeventplus/event.hpp>
 #include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
 
