@@ -1,8 +1,9 @@
+#include "../watchdog.hpp"
+
 #include <chrono>
 #include <memory>
 #include <sdbusplus/bus.hpp>
 #include <sdeventplus/event.hpp>
-#include <watchdog.hpp>
 
 #include <gtest/gtest.h>
 

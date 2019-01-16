@@ -1,4 +1,4 @@
-#include "watchdog_test.hpp"
+#include "watchdog.hpp"
 
 #include <memory>
 #include <thread>

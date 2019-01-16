@@ -4,7 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)
 TESTS = $(check_PROGRAMS)
 
 # Build/add utest to test suite
-check_PROGRAMS = watchdog_test
+check_PROGRAMS = watchdog
 
 utestCPPFLAGS = $(GTEST_MAIN_CFLAGS) \
                 $(AM_CPPFLAGS) \
@@ -23,8 +23,8 @@ utestLDFLAGS = $(GTEST_MAIN_LIBS) \
                $(PHOSPHOR_LOGGING_LIBS) \
                $(PHOSPHOR_DBUS_INTERFACES_LIBS)
 
-watchdog_test_CPPFLAGS = ${utestCPPFLAGS}
-watchdog_test_CXXFLAGS = ${utestCXXFLAGS}
-watchdog_test_LDFLAGS = ${utestLDFLAGS}
+watchdog_CPPFLAGS = ${utestCPPFLAGS}
+watchdog_CXXFLAGS = ${utestCXXFLAGS}
+watchdog_LDFLAGS = ${utestLDFLAGS}
 
-watchdog_test_SOURCES = ../watchdog.cpp watchdog_test.cpp
+watchdog_SOURCES = ../watchdog.cpp watchdog.cpp
