@@ -6,16 +6,16 @@
 
 using namespace phosphor::watchdog;
 
-seconds WdogTest::waitForWatchdog(seconds timeLimit)
+WdogTest::Quantum WdogTest::waitForWatchdog(Quantum timeLimit)
 {
     auto previousTimeRemaining = wdog->timeRemaining();
-    auto ret = 0s;
+    auto ret = Quantum(0);
     while (ret < timeLimit && previousTimeRemaining >= wdog->timeRemaining() &&
            wdog->timerEnabled())
     {
         previousTimeRemaining = wdog->timeRemaining();
 
-        constexpr auto sleepTime = 1s;
+        constexpr auto sleepTime = Quantum(1);
         if (event.run(sleepTime) == 0)
         {
             ret += sleepTime;
@@ -67,7 +67,7 @@ TEST_F(WdogTest, createWdogAndEnable)
 
     // Its possible that we are off by few msecs depending on
     // how we get scheduled. So checking a range here.
-    EXPECT_TRUE((remaining >= defaultInterval - defaultDrift) &&
+    EXPECT_TRUE((remaining >= defaultInterval - Quantum(1)) &&
                 (remaining <= defaultInterval));
 
     EXPECT_FALSE(wdog->timerExpired());
@@ -91,53 +91,54 @@ TEST_F(WdogTest, createWdogAndEnableThenDisable)
 }
 
 /** @brief Make sure that watchdog is started and enabled.
- *         Wait for 5 seconds and make sure that the remaining
- *         time shows 25 seconds.
+ *         Wait for 5 quantums and make sure that the remaining
+ *         time shows 5 fewer quantums.
  */
-TEST_F(WdogTest, enableWdogAndWait5Seconds)
+TEST_F(WdogTest, enableWdogAndWait5Quantums)
 {
     // Enable and then verify
     EXPECT_TRUE(wdog->enabled(true));
 
-    // Sleep for 5 seconds
-    auto sleepTime = 5s;
+    // Sleep for 5 quantums
+    auto sleepTime = Quantum(2);
+    ASSERT_LT(sleepTime, defaultInterval);
     std::this_thread::sleep_for(sleepTime);
 
-    // Get the remaining time again and expectation is that we get 25s
+    // Get the remaining time again and expectation is that we get fewer
     auto remaining = milliseconds(wdog->timeRemaining());
     auto expected = defaultInterval - sleepTime;
 
     // Its possible that we are off by few msecs depending on
     // how we get scheduled. So checking a range here.
-    EXPECT_TRUE((remaining >= expected - defaultDrift) &&
+    EXPECT_TRUE((remaining >= expected - Quantum(1)) &&
                 (remaining <= expected));
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_TRUE(wdog->timerEnabled());
 }
 
 /** @brief Make sure that watchdog is started and enabled.
- *         Wait 1 second and then reset the timer to 5 seconds
- *         and then expect the watchdog to expire in 5 seconds
+ *         Wait 1 quantum and then reset the timer to 5 quantums
+ *         and then expect the watchdog to expire in 5 quantums
  */
-TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
+TEST_F(WdogTest, enableWdogAndResetTo5Quantums)
 {
     // Enable and then verify
     EXPECT_TRUE(wdog->enabled(true));
 
     // Sleep for 1 second
-    std::this_thread::sleep_for(1s);
+    std::this_thread::sleep_for(Quantum(1));
 
     // Timer should still be running unexpired
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_TRUE(wdog->timerEnabled());
 
-    // Next timer will expire in 5 seconds from now.
-    auto expireTime = 5s;
+    // Next timer will expire in 5 quantums from now.
+    auto expireTime = Quantum(5);
     auto expireTimeMs = milliseconds(expireTime).count();
     EXPECT_EQ(expireTimeMs, wdog->timeRemaining(expireTimeMs));
 
     // Waiting for expiration
-    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
+    EXPECT_EQ(expireTime - Quantum(1), waitForWatchdog(expireTime));
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
 }
@@ -146,7 +147,7 @@ TEST_F(WdogTest, enableWdogAndResetTo5Seconds)
  */
 TEST_F(WdogTest, verifyIntervalUpdateReceived)
 {
-    auto expireTime = 5s;
+    auto expireTime = Quantum(5);
     auto expireTimeMs = milliseconds(expireTime).count();
     EXPECT_EQ(expireTimeMs, wdog->interval(expireTimeMs));
 
@@ -164,34 +165,33 @@ TEST_F(WdogTest, verifyIntervalUpdateRunning)
     EXPECT_TRUE(wdog->enabled(true));
     auto remaining = milliseconds(wdog->timeRemaining());
     EXPECT_GE(oldInterval, remaining);
-    EXPECT_LE(oldInterval - defaultDrift, remaining);
+    EXPECT_LE(oldInterval - Quantum(1), remaining);
     EXPECT_EQ(newInterval,
               milliseconds(wdog->interval(milliseconds(newInterval).count())));
 
     // Expect only the interval to update
     remaining = milliseconds(wdog->timeRemaining());
     EXPECT_GE(oldInterval, remaining);
-    EXPECT_LE(oldInterval - defaultDrift, remaining);
+    EXPECT_LE(oldInterval - Quantum(1), remaining);
     EXPECT_EQ(newInterval, milliseconds(wdog->interval()));
 
     // Expect reset to use the new interval
     wdog->resetTimeRemaining(false);
     remaining = milliseconds(wdog->timeRemaining());
     EXPECT_GE(newInterval, remaining);
-    EXPECT_LE(newInterval - defaultDrift, remaining);
+    EXPECT_LE(newInterval - Quantum(1), remaining);
 }
 
 /** @brief Make sure that watchdog is started and enabled.
- *         Wait default interval seconds and make sure that wdog has died
+ *         Wait default interval quantums and make sure that wdog has died
  */
 TEST_F(WdogTest, enableWdogAndWaitTillEnd)
 {
     // Enable and then verify
     EXPECT_TRUE(wdog->enabled(true));
-    auto expireTime = duration_cast<seconds>(defaultInterval);
 
     // Waiting default expiration
-    EXPECT_EQ(expireTime - 1s, waitForWatchdog(expireTime));
+    EXPECT_EQ(defaultInterval - Quantum(1), waitForWatchdog(defaultInterval));
 
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
@@ -206,7 +206,7 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
  */
 TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
 {
-    auto primaryInterval = 5s;
+    auto primaryInterval = Quantum(5);
     auto primaryIntervalMs = milliseconds(primaryInterval).count();
     auto fallbackInterval = primaryInterval * 2;
     auto fallbackIntervalMs = milliseconds(fallbackInterval).count();
@@ -229,7 +229,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    EXPECT_EQ(primaryInterval - 1s, waitForWatchdog(primaryInterval));
+    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -240,7 +240,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     EXPECT_TRUE(wdog->timerEnabled());
 
     // We should still be ticking in fallback when setting action or interval
-    auto newInterval = primaryInterval - 1s;
+    auto newInterval = primaryInterval - Quantum(1);
     auto newIntervalMs = milliseconds(newInterval).count();
     EXPECT_EQ(newInterval, milliseconds(wdog->interval(newIntervalMs)));
     EXPECT_EQ(Watchdog::Action::None,
@@ -259,12 +259,12 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
 
     remaining = milliseconds(wdog->timeRemaining());
     EXPECT_GE(fallbackInterval, remaining);
-    EXPECT_LE(fallbackInterval - defaultDrift, remaining);
+    EXPECT_LE(fallbackInterval - Quantum(1), remaining);
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_TRUE(wdog->timerEnabled());
 
     // Waiting fallback expiration
-    EXPECT_EQ(fallbackInterval - 1s, waitForWatchdog(fallbackInterval));
+    EXPECT_EQ(fallbackInterval - Quantum(1), waitForWatchdog(fallbackInterval));
 
     // We should now have disabled the watchdog after the fallback expires
     EXPECT_FALSE(wdog->enabled());
@@ -288,7 +288,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
  */
 TEST_F(WdogTest, enableWdogWithFallbackReEnable)
 {
-    auto primaryInterval = 5s;
+    auto primaryInterval = Quantum(5);
     auto primaryIntervalMs = milliseconds(primaryInterval).count();
     auto fallbackInterval = primaryInterval * 2;
     auto fallbackIntervalMs = milliseconds(fallbackInterval).count();
@@ -313,7 +313,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    EXPECT_EQ(primaryInterval - 1s, waitForWatchdog(primaryInterval));
+    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -341,7 +341,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
  */
 TEST_F(WdogTest, enableWdogWithFallbackAlways)
 {
-    auto primaryInterval = 5s;
+    auto primaryInterval = Quantum(5);
     auto primaryIntervalMs = milliseconds(primaryInterval).count();
     auto fallbackInterval = primaryInterval * 2;
     auto fallbackIntervalMs = milliseconds(fallbackInterval).count();
@@ -369,7 +369,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_GE(primaryInterval, milliseconds(wdog->timeRemaining()));
 
     // Waiting default expiration
-    EXPECT_EQ(primaryInterval - 1s, waitForWatchdog(primaryInterval));
+    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -380,7 +380,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_TRUE(wdog->timerEnabled());
 
     // Waiting fallback expiration
-    EXPECT_EQ(fallbackInterval - 1s, waitForWatchdog(fallbackInterval));
+    EXPECT_EQ(fallbackInterval - Quantum(1), waitForWatchdog(fallbackInterval));
 
     // We should now enter the fallback again
     EXPECT_FALSE(wdog->enabled());

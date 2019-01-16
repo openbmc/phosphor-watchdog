@@ -14,14 +14,19 @@ using namespace std::chrono_literals;
 class WdogTest : public ::testing::Test
 {
   public:
+    // The unit time used to measure the timer
+    // This should be large enough to accomodate drift
+    using Quantum = seconds;
+
     // Gets called as part of each TEST_F construction
     WdogTest() :
         event(sdeventplus::Event::get_default()),
         bus(sdbusplus::bus::new_default()),
         wdog(std::make_unique<phosphor::watchdog::Watchdog>(bus, TEST_PATH,
                                                             event)),
-        defaultInterval(milliseconds(wdog->interval())), defaultDrift(30)
+        defaultInterval(Quantum(3))
     {
+        wdog->interval(milliseconds(defaultInterval).count());
         // Initially the watchdog would be disabled
         EXPECT_FALSE(wdog->enabled());
     }
@@ -36,12 +41,7 @@ class WdogTest : public ::testing::Test
     std::unique_ptr<phosphor::watchdog::Watchdog> wdog;
 
     // This is the default interval as given in Interface definition
-    milliseconds defaultInterval;
-
-    // Acceptable drift when we compare the interval to timeRemaining.
-    // This is needed since it depends on when do we get scheduled and it
-    // has happened that remaining time was off by few msecs.
-    milliseconds defaultDrift;
+    Quantum defaultInterval;
 
   protected:
     // Dummy name for object path
@@ -51,5 +51,5 @@ class WdogTest : public ::testing::Test
 
     // Returns how long it took for the current watchdog timer to be
     // disabled or have its timeRemaining reset.
-    seconds waitForWatchdog(seconds timeLimit);
+    Quantum waitForWatchdog(Quantum timeLimit);
 };
