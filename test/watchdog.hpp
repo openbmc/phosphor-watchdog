@@ -16,7 +16,7 @@ class WdogTest : public ::testing::Test
   public:
     // The unit time used to measure the timer
     // This should be large enough to accomodate drift
-    using Quantum = seconds;
+    using Quantum = duration<uint64_t, std::deci>;
 
     // Gets called as part of each TEST_F construction
     WdogTest() :
