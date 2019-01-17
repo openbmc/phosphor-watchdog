@@ -214,10 +214,10 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     // We need to make a wdog with the right fallback options
     // The interval is set to be noticeably different from the default
     // so we can always tell the difference
-    Watchdog::Fallback fallback{
-        .action = Watchdog::Action::PowerOff,
-        .interval = static_cast<uint64_t>(fallbackIntervalMs),
-    };
+    Watchdog::Fallback fallback;
+    fallback.action = Watchdog::Action::PowerOff;
+    fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
+    fallback.always = false;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
@@ -296,11 +296,10 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     // We need to make a wdog with the right fallback options
     // The interval is set to be noticeably different from the default
     // so we can always tell the difference
-    Watchdog::Fallback fallback{
-        .action = Watchdog::Action::PowerOff,
-        .interval = static_cast<uint64_t>(fallbackIntervalMs),
-        .always = false,
-    };
+    Watchdog::Fallback fallback;
+    fallback.action = Watchdog::Action::PowerOff;
+    fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
+    fallback.always = false;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
@@ -350,11 +349,10 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     // We need to make a wdog with the right fallback options
     // The interval is set to be noticeably different from the default
     // so we can always tell the difference
-    Watchdog::Fallback fallback{
-        .action = Watchdog::Action::PowerOff,
-        .interval = static_cast<uint64_t>(fallbackIntervalMs),
-        .always = true,
-    };
+    Watchdog::Fallback fallback;
+    fallback.action = Watchdog::Action::PowerOff;
+    fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
+    fallback.always = true;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
