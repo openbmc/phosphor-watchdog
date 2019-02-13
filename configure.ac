@@ -19,10 +19,10 @@ AX_APPEND_COMPILE_FLAGS([-Wall -Werror], [CXXFLAGS])
 LT_INIT
 
 # Check for needed modules
-PKG_CHECK_MODULES([PHOSPHOR_LOGGING], [phosphor-logging], [], [AC_MSG_ERROR([Could not find phosphor-logging...openbmc/phosphor-logging package required])])
-PKG_CHECK_MODULES([SDBUSPLUS], [sdbusplus],, [AC_MSG_ERROR([Could not find sdbusplus...openbmc/sdbusplus package required])])
-PKG_CHECK_MODULES([SDEVENTPLUS], [sdeventplus],, [AC_MSG_ERROR([Could not find sdeventplus...openbmc/sdeventplus package required])])
-PKG_CHECK_MODULES([PHOSPHOR_DBUS_INTERFACES], [phosphor-dbus-interfaces], [], [AC_MSG_ERROR([Could not find phosphor-dbus-interfaces...openbmc/phosphor-dbus-interfaces package required])])
+PKG_CHECK_MODULES([PHOSPHOR_LOGGING], [phosphor-logging])
+PKG_CHECK_MODULES([SDBUSPLUS], [sdbusplus])
+PKG_CHECK_MODULES([SDEVENTPLUS], [sdeventplus])
+PKG_CHECK_MODULES([PHOSPHOR_DBUS_INTERFACES], [phosphor-dbus-interfaces])
 PKG_CHECK_MODULES([GTEST_MAIN], [gtest_main], [],
     [
         AX_PTHREAD([GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=1"],[GTEST_MAIN_CFLAGS="-DGTEST_HAS_PTHREAD=0"])
