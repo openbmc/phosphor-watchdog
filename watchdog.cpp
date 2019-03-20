@@ -101,6 +101,8 @@ void Watchdog::timeOutHandler()
         action = fallback->action;
     }
 
+    WatchdogInherits::expiredTimerUse(WatchdogInherits::currentTimerUse());
+
     auto target = actionTargetMap.find(action);
     if (target == actionTargetMap.end())
     {
