@@ -1,4 +1,4 @@
-sbin_PROGRAMS = phosphor-watchdog
+bin_PROGRAMS = phosphor-watchdog
 
 noinst_HEADERS = watchdog.hpp
 

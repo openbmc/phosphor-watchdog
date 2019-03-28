@@ -36,7 +36,7 @@ executable(
     sdeventplus,
   ],
   install: true,
-  install_dir: get_option('sbindir'))
+  install_dir: get_option('bindir'))
 
 if not build_tests.disabled()
   subdir('test')
