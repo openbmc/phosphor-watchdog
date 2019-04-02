@@ -115,6 +115,76 @@ void Watchdog::timeOutHandler()
                          entry("ACTION=%s", convertForMessage(action).c_str()),
                          entry("TARGET=%s", target->second.c_str()));
 
+#if SEL_JOURNAL_MERGED
+        uint8_t eventData1;
+        switch (action)
+        {
+            case Action::None:
+                eventData1 = 0;
+                break;
+            case Action::HardReset:
+                eventData1 = 1;
+                break;
+            case Action::PowerOff:
+                eventData1 = 2;
+                break;
+            case Action::PowerCycle:
+                eventData1 = 3;
+                break;
+        }
+
+        static constexpr auto SEL_LOGGER_SERVICE =
+            "xyz.openbmc_project.Logging.IPMI";
+        static constexpr auto SEL_LOGGER_ROOT =
+            "/xyz/openbmc_project/Logging/IPMI";
+        static constexpr auto SEL_LOGGER_INTERFACE =
+            "xyz.openbmc_project.Logging.IPMI";
+        static constexpr auto SEL_LOGGER_METHOD = "IpmiSelAdd";
+        static constexpr const uint16_t ipmiBMCSlaveAddr = 0x20;
+
+        try
+        {
+            auto method =
+                bus.new_method_call(SEL_LOGGER_SERVICE, SEL_LOGGER_ROOT,
+                                    SEL_LOGGER_INTERFACE, SEL_LOGGER_METHOD);
+            method.append("watchdog: Timed out",
+                          "/xyz/openbmc_project/state/watchdog/host0",
+                          std::vector<uint8_t>({eventData1, 0, 0}), true,
+                          ipmiBMCSlaveAddr);
+            bus.call_noreply(method);
+        }
+        catch (const SdBusError& e)
+        {
+            log<level::ERR>(e.what());
+        }
+#endif
+
+#if SEL_JOURNAL_LOGGING_MERGED
+        uint8_t eventData1;
+        switch (action)
+        {
+            case Action::None:
+                eventData1 = 0;
+                break;
+            case Action::HardReset:
+                eventData1 = 1;
+                break;
+            case Action::PowerOff:
+                eventData1 = 2;
+                break;
+            case Action::PowerCycle:
+                eventData1 = 3;
+                break;
+        }
+
+
+        log<level::ERR>("watchdog: Timed out",
+                       ipmiSelEntry(
+                           "/xyz/openbmc_project/sensors/watchdog/host0",
+                           std::vector<uint8_t>({eventData1, 0, 0}),
+                           SensorAssertion::asserted));
+#endif
+
         try
         {
             auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
