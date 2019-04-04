@@ -17,6 +17,7 @@
 #include "watchdog.hpp"
 
 #include <CLI/CLI.hpp>
+#include <functional>
 #include <iostream>
 #include <optional>
 #include <phosphor-logging/elog-errors.hpp>
@@ -123,6 +124,12 @@ int main(int argc, char* argv[])
         ->needs(fallbackActionOpt)
         ->needs(fallbackIntervalOpt);
 
+    // Should we watch for postcodes
+    bool watchPostcodes;
+    app.add_flag("-w,--watch_postcodes", watchPostcodes,
+                 "Should we reset the time remaining any time a postcode "
+                 "is signaled.");
+
     CLI11_PARSE(app, argc, argv);
 
     // Put together a list of actions and associated systemd targets
@@ -212,6 +219,18 @@ int main(int argc, char* argv[])
         // Create a watchdog object
         Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
                           std::move(maybeFallback));
+
+        std::optional<sdbusplus::bus::match::match> watchPostcodeMatch;
+        if (watchPostcodes)
+        {
+            watchPostcodeMatch.emplace(
+                bus,
+                sdbusplus::bus::match::rules::propertiesChanged(
+                    "/xyz/openbmc_project/state/boot/raw",
+                    "xyz.openbmc_project.State.Boot.Raw.Value"),
+                std::bind(&Watchdog::resetTimeRemaining, std::ref(watchdog),
+                          false));
+        }
 
         // Claim the bus
         bus.request_name(service.c_str());
