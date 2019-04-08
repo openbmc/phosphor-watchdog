@@ -115,6 +115,31 @@ void Watchdog::timeOutHandler()
                          entry("ACTION=%s", convertForMessage(action).c_str()),
                          entry("TARGET=%s", target->second.c_str()));
 
+        uint8_t eventData1;
+        switch (action)
+        {
+            case Action::None:
+                eventData1 = 0;
+                break;
+            case Action::HardReset:
+                eventData1 = 1;
+                break;
+            case Action::PowerOff:
+                eventData1 = 2;
+                break;
+            case Action::PowerCycle:
+                eventData1 = 3;
+                break;
+            default:
+                break;
+        }
+
+        log<level::ERR>("watchdog: Timed out",
+                       ipmiSelEntry(
+                           "/xyz/openbmc_project/state/watchdog/host0",
+                           std::vector<uint8_t>({eventData1, 0, 0}),
+                           SensorAssertion::asserted));
+
         try
         {
             auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
