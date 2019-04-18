@@ -101,19 +101,23 @@ void Watchdog::timeOutHandler()
         action = fallback->action;
     }
 
-    WatchdogInherits::expiredTimerUse(WatchdogInherits::currentTimerUse());
+    expiredTimerUse(currentTimerUse());
 
     auto target = actionTargetMap.find(action);
     if (target == actionTargetMap.end())
     {
         log<level::INFO>("watchdog: Timed out with no target",
-                         entry("ACTION=%s", convertForMessage(action).c_str()));
+                         entry("ACTION=%s", convertForMessage(action).c_str()),
+                         entry("TIMER_USE=%s",
+                               convertForMessage(expiredTimerUse()).c_str()));
     }
     else
     {
-        log<level::INFO>("watchdog: Timed out",
-                         entry("ACTION=%s", convertForMessage(action).c_str()),
-                         entry("TARGET=%s", target->second.c_str()));
+        log<level::INFO>(
+            "watchdog: Timed out",
+            entry("ACTION=%s", convertForMessage(action).c_str()),
+            entry("TIMER_USE=%s", convertForMessage(expiredTimerUse()).c_str()),
+            entry("TARGET=%s", target->second.c_str()));
 
         try
         {
