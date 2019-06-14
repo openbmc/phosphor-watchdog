@@ -1,5 +1,6 @@
 #include "watchdog.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
@@ -90,6 +91,12 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
 
     // Update Base class data.
     return WatchdogInherits::timeRemaining(value);
+}
+
+// Set value of Interval
+uint64_t Watchdog::interval(uint64_t value)
+{
+    return WatchdogInherits::interval(std::max(value, minInterval));
 }
 
 // Optional callback function on timer expiration
