@@ -390,3 +390,19 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_TRUE(wdog->timerEnabled());
 }
+
+/** @brief Test minimal interval
+ *  The minimal interval was set 2 seconds
+ *  Test that when setting interval to 1s , it is still returning 2s
+ */
+TEST_F(WdogTest, verifyMinIntervalSetting)
+{
+    auto newInterval = Quantum(1);
+    auto newIntervalms = milliseconds(newInterval).count();
+    auto minInterval = milliseconds(TEST_MIN_INTERVAL).count();
+
+    // Check that the interval was not set to smaller value than min_interval
+    EXPECT_EQ(minInterval, wdog->interval(newIntervalms));
+    // Check that the interval was not set to smaller value than min_interval
+    EXPECT_EQ(minInterval, wdog->interval());
+}
