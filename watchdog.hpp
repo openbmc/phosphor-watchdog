@@ -15,6 +15,7 @@ namespace phosphor
 namespace watchdog
 {
 
+constexpr auto DEFAULT_MIN_INTERVAL_MS = 0;
 namespace Base = sdbusplus::xyz::openbmc_project::State::server;
 using WatchdogInherits = sdbusplus::server::object::object<Base::Watchdog>;
 
@@ -62,12 +63,18 @@ class Watchdog : public WatchdogInherits
     Watchdog(sdbusplus::bus::bus& bus, const char* objPath,
              const sdeventplus::Event& event,
              ActionTargetMap&& actionTargetMap = {},
-             std::optional<Fallback>&& fallback = std::nullopt) :
+             std::optional<Fallback>&& fallback = std::nullopt,
+             uint64_t min_interval = DEFAULT_MIN_INTERVAL_MS) :
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargetMap(std::move(actionTargetMap)),
-        fallback(std::move(fallback)),
+        fallback(std::move(fallback)), min_interval(min_interval),
         timer(event, std::bind(&Watchdog::timeOutHandler, this))
     {
+        // We set the watchdog interval with the default min value.
+        // We call the base class as no interval was set yet.
+        fprintf(stderr, "min_interval=%lu", min_interval);
+        fflush(stderr);
+        WatchdogInherits::interval(min_interval);
         // We need to poke the enable mechanism to make sure that the timer
         // enters the fallback state if the fallback is always enabled.
         tryFallbackOrDisable();
@@ -116,6 +123,32 @@ class Watchdog : public WatchdogInherits
      */
     uint64_t timeRemaining(uint64_t value) override;
 
+    /** @brief Get value of Interval
+     *
+     *
+     *  @return: current interval
+     *
+     */
+    using WatchdogInherits::interval;
+
+    /** @brief Set value of Interval with option to skip sending signal
+     *
+     *  @param[in] value - interval time to set
+     *
+     *  @return: interval that was set
+     *
+     */
+    uint64_t interval(uint64_t value, bool skipSignal) override;
+
+    /** @brief Set value of Interval
+     *
+     *  @param[in] value - interval time to set
+     *
+     *  @return: interval that was set
+     *
+     */
+    uint64_t interval(uint64_t value) override;
+
     /** @brief Tells if the referenced timer is expired or not */
     inline auto timerExpired() const
     {
@@ -137,6 +170,9 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Fallback timer options */
     std::optional<Fallback> fallback;
+
+    /** @brief Minimum watchdog interval value */
+    uint64_t min_interval;
 
     /** @brief Contained timer object */
     sdeventplus::utility::Timer<sdeventplus::ClockId::Monotonic> timer;
