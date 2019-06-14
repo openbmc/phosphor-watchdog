@@ -4,7 +4,10 @@
 #include <thread>
 #include <utility>
 
-using namespace phosphor::watchdog;
+namespace phosphor
+{
+namespace watchdog
+{
 
 WdogTest::Quantum WdogTest::waitForWatchdog(Quantum timeLimit)
 {
@@ -353,9 +356,14 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     fallback.action = Watchdog::Action::PowerOff;
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = true;
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
-                                      Watchdog::ActionTargetMap(),
-                                      std::move(fallback));
+    wdog = std::make_unique<Watchdog>(
+        bus, TEST_PATH, event, Watchdog::ActionTargetMap(), std::move(fallback),
+        milliseconds(TEST_MIN_INTERVAL).count());
+
+    // Make sure defualt interval is biggger than min interval
+    EXPECT_LT(milliseconds((TEST_MIN_INTERVAL).count()),
+              milliseconds(wdog->interval()));
+
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     auto remaining = milliseconds(wdog->timeRemaining());
@@ -390,3 +398,22 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_TRUE(wdog->timerEnabled());
 }
+
+/** @brief Test minimal interval
+ *  The minimal interval was set 2 seconds
+ *  Test that when setting interval to 1s , it is still returning 2s
+ */
+TEST_F(WdogTest, verifyMinIntervalSetting)
+{
+    auto newInterval = Quantum(1);
+    auto newIntervalms = milliseconds(newInterval).count();
+    auto minInterval = milliseconds(TEST_MIN_INTERVAL).count();
+
+    // Check that the interval was not set to smaller value than min_interval
+    EXPECT_EQ(minInterval, wdog->interval(newIntervalms));
+    // Check that the interval was not set to smaller value than min_interval
+    EXPECT_EQ(minInterval, wdog->interval());
+}
+
+} // namespace watchdog
+} // namespace phosphor
