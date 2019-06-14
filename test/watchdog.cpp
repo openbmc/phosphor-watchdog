@@ -4,7 +4,10 @@
 #include <thread>
 #include <utility>
 
-using namespace phosphor::watchdog;
+namespace phosphor
+{
+namespace watchdog
+{
 
 WdogTest::Quantum WdogTest::waitForWatchdog(Quantum timeLimit)
 {
@@ -354,8 +357,13 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = true;
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
-                                      Watchdog::ActionTargetMap(),
-                                      std::move(fallback));
+                                      Watchdog::ActionTargetMap(), fallback,
+                                      milliseconds(TEST_MIN_INTERVAL).count());
+
+    // Make sure defualt interval is biggger than min interval
+    EXPECT_LT(milliseconds((TEST_MIN_INTERVAL).count()),
+              milliseconds(wdog->interval()));
+
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     auto remaining = milliseconds(wdog->timeRemaining());
@@ -390,3 +398,46 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_FALSE(wdog->timerExpired());
     EXPECT_TRUE(wdog->timerEnabled());
 }
+
+/** @brief Test minimal interval
+ *  The minimal interval was set 2 seconds
+ *  Test that when setting interval to 1s , it is still returning 2s
+ */
+TEST_F(WdogTest, verifyMinIntervalSetting)
+{
+    auto newInterval = Quantum(1);
+    auto newIntervalMs = milliseconds(newInterval).count();
+    auto minIntervalMs = milliseconds(TEST_MIN_INTERVAL).count();
+
+    // Check first that the current interval is greater than minInterval
+    EXPECT_LT(minIntervalMs, wdog->interval());
+    // Check that the interval was not set to smaller value than minInterval
+    EXPECT_EQ(minIntervalMs, wdog->interval(newIntervalMs));
+    // Check that the interval was not set to smaller value than minInterval
+    EXPECT_EQ(minIntervalMs, wdog->interval());
+}
+
+/** @brief Test minimal interval
+ *  Initiate default Watchdog in order to get the default
+ *  interval.
+ *  Initiate watchdog with minInterval greater than default
+ *  interval, and make sure the default interval was set to the
+ *  minInterval.
+ */
+TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
+{
+    // Initiate default Watchdog and get the default interval value.
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event);
+    auto defaultInterval = wdog->interval();
+    auto minInterval = defaultInterval + 100;
+    // We initiate a new Watchdog with min interval greater than the default
+    // intrval
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
+                                      Watchdog::ActionTargetMap(), std::nullopt,
+                                      minInterval);
+    // Check that the interval was set to the minInterval
+    EXPECT_EQ(minInterval, wdog->interval());
+}
+
+} // namespace watchdog
+} // namespace phosphor
