@@ -9,6 +9,10 @@
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
+using namespace phosphor::watchdog;
+
+constexpr auto TEST_MIN_INTERVAL = duration<uint64_t, std::deci>(2);
+Watchdog::Fallback fallback;
 
 // Test Watchdog functionality
 class WdogTest : public ::testing::Test
@@ -22,9 +26,12 @@ class WdogTest : public ::testing::Test
     WdogTest() :
         event(sdeventplus::Event::get_default()),
         bus(sdbusplus::bus::new_default()),
-        wdog(std::make_unique<phosphor::watchdog::Watchdog>(bus, TEST_PATH,
-                                                            event)),
+        wdog(std::make_unique<Watchdog>(
+            bus, TEST_PATH, event, Watchdog::ActionTargetMap(),
+            std::move(fallback), milliseconds(TEST_MIN_INTERVAL).count())),
+
         defaultInterval(Quantum(3))
+
     {
         wdog->interval(milliseconds(defaultInterval).count());
         // Initially the watchdog would be disabled
@@ -38,7 +45,7 @@ class WdogTest : public ::testing::Test
     sdbusplus::bus::bus bus;
 
     // Watchdog object
-    std::unique_ptr<phosphor::watchdog::Watchdog> wdog;
+    std::unique_ptr<Watchdog> wdog;
 
     // This is the default interval as given in Interface definition
     Quantum defaultInterval;
