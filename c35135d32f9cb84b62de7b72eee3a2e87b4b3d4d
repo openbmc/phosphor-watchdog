@@ -1,0 +1,8 @@
+Ok-To-Test+1: Jenkins <openbmc-ci-admin@ozlabs.org>
+Verified+1: Jenkins <openbmc-ci-admin@ozlabs.org>
+Code-Review+2: William A. Kennington III <wak@google.com>
+Submitted-by: <ofery@google.com>
+Submitted-at: Fri, 28 Jun 2019 21:58:22 +0000
+Reviewed-on: https://gerrit.openbmc-project.xyz/c/openbmc/phosphor-watchdog/+/23090
+Project: openbmc/phosphor-watchdog
+Branch: refs/heads/master
