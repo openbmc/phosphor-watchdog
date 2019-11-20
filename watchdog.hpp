@@ -64,10 +64,12 @@ class Watchdog : public WatchdogInherits
              const sdeventplus::Event& event,
              ActionTargetMap&& actionTargetMap = {},
              std::optional<Fallback>&& fallback = std::nullopt,
-             uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS) :
+             uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS,
+             bool dbusTarget = false) :
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargetMap(std::move(actionTargetMap)),
         fallback(std::move(fallback)), minInterval(minInterval),
+        dbusTarget(dbusTarget),
         timer(event, std::bind(&Watchdog::timeOutHandler, this))
     {
         // We set the watchdog interval with the default value.
@@ -161,6 +163,9 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Minimum watchdog interval value */
     uint64_t minInterval;
+
+    /** @brief Flag to set dbus as target vs systemd unit */
+    bool dbusTarget;
 
     /** @brief Contained timer object */
     sdeventplus::utility::Timer<sdeventplus::ClockId::Monotonic> timer;

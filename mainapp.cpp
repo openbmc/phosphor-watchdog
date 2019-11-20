@@ -96,6 +96,12 @@ int main(int argc, char* argv[])
                    "set for ExpireAction when the timer expires.")
         ->group(targetGroup);
 
+    bool dbusTarget;
+    app.add_flag("-d, --dbus", dbusTarget,
+                 "Flag to enable dbus method "
+                 "as a target against systemd unit.")
+        ->group(targetGroup);
+
     // Fallback related options
     const std::string fallbackGroup = "Fallback Options";
     std::optional<std::string> fallbackAction;
@@ -222,7 +228,7 @@ int main(int argc, char* argv[])
 
         // Create a watchdog object
         Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
-                          std::move(maybeFallback), minInterval);
+                          std::move(maybeFallback), minInterval, dbusTarget);
 
         std::optional<sdbusplus::bus::match::match> watchPostcodeMatch;
         if (watchPostcodes)

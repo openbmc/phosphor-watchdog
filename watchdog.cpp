@@ -23,6 +23,15 @@ constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
 constexpr auto SYSTEMD_ROOT = "/org/freedesktop/systemd1";
 constexpr auto SYSTEMD_INTERFACE = "org.freedesktop.systemd1.Manager";
 
+// chassis state manager service
+namespace chassis
+{
+static constexpr const char* busName = "xyz.openbmc_project.State.Chassis";
+static constexpr const char* path = "/xyz/openbmc_project/state/chassis0";
+static constexpr const char* interface = "xyz.openbmc_project.State.Chassis";
+static constexpr const char* request = "RequestedPowerTransition";
+} // namespace chassis
+
 void Watchdog::resetTimeRemaining(bool enableWatchdog)
 {
     timeRemaining(interval());
@@ -128,12 +137,26 @@ void Watchdog::timeOutHandler()
 
         try
         {
-            auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
-                                              SYSTEMD_INTERFACE, "StartUnit");
-            method.append(target->second);
-            method.append("replace");
+            if (dbusTarget)
+            {
+                auto method = bus.new_method_call(
+                    chassis::busName, chassis::path,
+                    "org.freedesktop.DBus.Properties", "Set");
+                method.append(chassis::interface, chassis::request,
+                              std::variant<std::string>(target->second));
+                bus.call_noreply(method);
+            }
+            else
+            {
 
-            bus.call_noreply(method);
+                auto method =
+                    bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
+                                        SYSTEMD_INTERFACE, "StartUnit");
+                method.append(target->second);
+                method.append("replace");
+
+                bus.call_noreply(method);
+            }
         }
         catch (const SdBusError& e)
         {
