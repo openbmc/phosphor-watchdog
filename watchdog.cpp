@@ -32,6 +32,17 @@ static constexpr const char* interface = "xyz.openbmc_project.State.Chassis";
 static constexpr const char* request = "RequestedPowerTransition";
 } // namespace chassis
 
+namespace restart
+{
+static constexpr const char* busName =
+    "xyz.openbmc_project.Control.Host.RestartCause";
+static constexpr const char* path =
+    "/xyz/openbmc_project/control/host0/restart_cause";
+static constexpr const char* interface =
+    "xyz.openbmc_project.Control.Host.RestartCause";
+static constexpr const char* property = "RequestedRestartCause";
+} // namespace restart
+
 void Watchdog::resetTimeRemaining(bool enableWatchdog)
 {
     timeRemaining(interval());
@@ -164,6 +175,29 @@ void Watchdog::timeOutHandler()
                             entry("TARGET=%s", target->second.c_str()),
                             entry("ERROR=%s", e.what()));
             commit<InternalFailure>();
+        }
+
+        // set restart cause for watchdog HardReset & PowerCycle actions
+        if (dbusTarget && ((action == Watchdog::Action::HardReset) ||
+                           (action == Watchdog::Action::PowerCycle)))
+        {
+            try
+            {
+                auto method = bus.new_method_call(
+                    restart::busName, restart::path,
+                    "org.freedesktop.DBus.Properties", "Set");
+                method.append(
+                    restart::interface, restart::property,
+                    std::variant<std::string>("xyz.openbmc_project.State.Host."
+                                              "RestartCause.WatchdogTimer"));
+                bus.call(method);
+            }
+            catch (sdbusplus::exception_t& e)
+            {
+                log<level::ERR>("Failed to set HostRestartCause property",
+                                entry("ERROR=%s", e.what()));
+                commit<InternalFailure>();
+            }
         }
     }
 
