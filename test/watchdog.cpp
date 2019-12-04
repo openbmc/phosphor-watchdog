@@ -335,6 +335,63 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     EXPECT_TRUE(wdog->timerEnabled());
 }
 
+/** @brief Make sure the watchdog is started and enabled with a fallback
+ *         Wait through the initial trip and ensure the fallback is observed
+ *         Make sure that changing the primary interval and calling reset timer
+ *         will enable the primary watchdog with primary interval.
+ */
+TEST_F(WdogTest, enableWdogWithFallbackResetTimerEnable)
+{
+    auto primaryInterval = Quantum(5);
+    auto primaryIntervalMs = milliseconds(primaryInterval).count();
+    auto fallbackInterval = primaryInterval * 2;
+    auto fallbackIntervalMs = milliseconds(fallbackInterval).count();
+    auto newInterval = fallbackInterval * 2;
+    auto newIntervalMs = milliseconds(newInterval).count();
+
+    // We need to make a wdog with the right fallback options
+    // The interval is set to be noticeably different from the default
+    // so we can always tell the difference
+    Watchdog::Fallback fallback;
+    fallback.action = Watchdog::Action::PowerOff;
+    fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
+    fallback.always = false;
+    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
+                                      Watchdog::ActionTargetMap(),
+                                      std::move(fallback));
+    EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
+    EXPECT_FALSE(wdog->enabled());
+    EXPECT_EQ(0, wdog->timeRemaining());
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_FALSE(wdog->timerEnabled());
+
+    // Enable and then verify
+    EXPECT_TRUE(wdog->enabled(true));
+
+    // Waiting default expiration
+    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
+
+    // We should now have entered the fallback once the primary expires
+    EXPECT_FALSE(wdog->enabled());
+    auto remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(fallbackInterval, remaining);
+    EXPECT_LT(primaryInterval, remaining);
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
+
+    // Setting the interval should take effect once resetTimer re-enables wdog
+    EXPECT_EQ(newIntervalMs, wdog->interval(newIntervalMs));
+    wdog->resetTimeRemaining(true);
+
+    // We should have re-entered the primary
+    EXPECT_TRUE(wdog->enabled());
+    remaining = milliseconds(wdog->timeRemaining());
+    EXPECT_GE(newInterval, remaining);
+    EXPECT_LE(newInterval - Quantum(1), remaining);
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
+}
+
 /** @brief Make sure the watchdog is started and with a fallback without
  *         sending an enable
  *         Then enable the watchdog
