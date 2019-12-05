@@ -485,15 +485,35 @@ TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
 {
     // Initiate default Watchdog and get the default interval value.
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event);
-    auto defaultInterval = wdog->interval();
-    auto minInterval = defaultInterval + 100;
+    auto defaultIntervalMs = wdog->interval();
+    auto defaultInterval = milliseconds(defaultIntervalMs);
+    auto minInterval = defaultInterval + Quantum(30);
+    auto minIntervalMs = milliseconds(minInterval).count();
+
     // We initiate a new Watchdog with min interval greater than the default
     // intrval
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(), std::nullopt,
-                                      minInterval);
+                                      minIntervalMs);
     // Check that the interval was set to the minInterval
-    EXPECT_EQ(minInterval, wdog->interval());
+    EXPECT_EQ(minIntervalMs, wdog->interval());
+
+    // Enable and then verify
+    EXPECT_TRUE(wdog->enabled(true));
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
+
+    // Set remaining time shorter than minInterval will actually set it to
+    // minInterval
+    auto remaining = milliseconds(wdog->timeRemaining(defaultIntervalMs));
+
+    // Its possible that we are off by few msecs depending on
+    // how we get scheduled. So checking a range here.
+    EXPECT_TRUE((remaining >= minInterval - Quantum(1)) &&
+                (remaining <= minInterval));
+
+    EXPECT_FALSE(wdog->timerExpired());
+    EXPECT_TRUE(wdog->timerEnabled());
 }
 
 } // namespace watchdog
