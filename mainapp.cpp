@@ -131,8 +131,8 @@ int main(int argc, char* argv[])
                  "is signaled.");
 
     uint64_t minInterval = phosphor::watchdog::DEFAULT_MIN_INTERVAL_MS;
-    app.add_flag("-m,--min_interval", minInterval,
-                 "Set minimum interval for watchdog");
+    app.add_option("-m,--min_interval", minInterval,
+                   "Set minimum interval for watchdog");
 
     CLI11_PARSE(app, argc, argv);
 
