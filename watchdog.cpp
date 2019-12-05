@@ -79,7 +79,12 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
         return 0;
     }
 
-    if (!this->enabled())
+    if (this->enabled())
+    {
+        // Update interval to minInterval if applicable
+        value = std::max(value, minInterval);
+    }
+    else
     {
         // Having a timer but not displaying an enabled value means we
         // are inside of the fallback
