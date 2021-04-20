@@ -2,7 +2,7 @@ project(
   'phosphor-watchdog',
   'cpp',
   version: '0.1',
-  meson_version: '>=0.49.0',
+  meson_version: '>=0.55.0',
   default_options: [
     'warning_level=3',
     'cpp_std=c++17',
@@ -13,8 +13,8 @@ watchdog_headers = include_directories('.')
 watchdog_deps = [
   dependency('phosphor-dbus-interfaces'),
   dependency('phosphor-logging'),
-  dependency('sdbusplus'),
-  dependency('sdeventplus'),
+  dependency('sdbusplus', fallback: ['sdbusplus', 'sdbusplus_dep']),
+  dependency('sdeventplus', fallback: ['sdeventplus', 'sdeventplus_dep']),
 ]
 
 watchdog_lib = static_library(
