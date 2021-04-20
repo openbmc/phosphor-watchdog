@@ -1,12 +1,13 @@
-project('phosphor-watchdog', 'cpp',
-        version: '0.1', meson_version: '>=0.49.0',
-        default_options: [
-          'warning_level=3',
-          'werror=true',
-          'cpp_std=c++17'
-        ])
-
-build_tests = get_option('tests')
+project(
+  'phosphor-watchdog',
+  'cpp',
+  version: '0.1',
+  meson_version: '>=0.49.0',
+  default_options: [
+    'warning_level=3',
+    'werror=true',
+    'cpp_std=c++17',
+  ])
 
 phosphor_dbus_interfaces = dependency('phosphor-dbus-interfaces')
 phosphor_logging = dependency('phosphor-logging')
@@ -38,6 +39,6 @@ executable(
   install: true,
   install_dir: get_option('bindir'))
 
-if not build_tests.disabled()
+if not get_option('tests').disabled()
   subdir('test')
 endif
