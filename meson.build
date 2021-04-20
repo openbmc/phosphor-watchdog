@@ -8,33 +8,32 @@ project(
     'cpp_std=c++17',
   ])
 
-phosphor_dbus_interfaces = dependency('phosphor-dbus-interfaces')
-phosphor_logging = dependency('phosphor-logging')
-sdbusplus = dependency('sdbusplus')
-sdeventplus = dependency('sdeventplus')
+watchdog_headers = include_directories('.')
 
-libwatchdog = static_library(
+watchdog_deps = [
+  dependency('phosphor-dbus-interfaces'),
+  dependency('phosphor-logging'),
+  dependency('sdbusplus'),
+  dependency('sdeventplus'),
+]
+
+watchdog_lib = static_library(
   'watchdog',
   'watchdog.cpp',
   implicit_include_directories: false,
-  dependencies: [
-    phosphor_dbus_interfaces,
-    phosphor_logging,
-    sdbusplus,
-    sdeventplus,
-  ])
+  include_directories: watchdog_headers,
+  dependencies: watchdog_deps)
+
+watchdog_dep = declare_dependency(
+  dependencies: watchdog_deps,
+  include_directories: watchdog_headers,
+  link_with: watchdog_lib)
 
 executable(
   'phosphor-watchdog',
   'mainapp.cpp',
   implicit_include_directories: false,
-  link_with: libwatchdog,
-  dependencies: [
-    phosphor_logging,
-    phosphor_dbus_interfaces,
-    sdbusplus,
-    sdeventplus,
-  ],
+  dependencies: watchdog_dep,
   install: true,
   install_dir: get_option('bindir'))
 
