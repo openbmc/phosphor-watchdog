@@ -221,6 +221,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     fallback.action = Watchdog::Action::PowerOff;
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = false;
+    wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
@@ -303,6 +304,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     fallback.action = Watchdog::Action::PowerOff;
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = false;
+    wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
@@ -356,6 +358,7 @@ TEST_F(WdogTest, enableWdogWithFallbackResetTimerEnable)
     fallback.action = Watchdog::Action::PowerOff;
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = false;
+    wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(),
                                       std::move(fallback));
@@ -413,6 +416,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     fallback.action = Watchdog::Action::PowerOff;
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = true;
+    wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(), fallback,
                                       milliseconds(TEST_MIN_INTERVAL).count());
@@ -484,6 +488,7 @@ TEST_F(WdogTest, verifyMinIntervalSetting)
 TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
 {
     // Initiate default Watchdog and get the default interval value.
+    wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event);
     auto defaultIntervalMs = wdog->interval();
     auto defaultInterval = milliseconds(defaultIntervalMs);
@@ -492,6 +497,7 @@ TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
 
     // We initiate a new Watchdog with min interval greater than the default
     // intrval
+    wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(), std::nullopt,
                                       minIntervalMs);
