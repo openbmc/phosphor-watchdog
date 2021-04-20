@@ -12,6 +12,5 @@ foreach t : tests
       t.underscorify(),
       t + '.cpp',
       implicit_include_directories: false,
-      link_with: libwatchdog,
-      dependencies: [gtest, gmock]))
+      dependencies: [watchdog_dep, gtest, gmock]))
 endforeach
