@@ -16,6 +16,24 @@
       "revId": "0316481c8a71af88db050f2c8d3dd1001e50ed8c",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86bdb44c_f6acb575",
+        "filename": "meson.build",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000188
+      },
+      "writtenOn": "2021-04-22T22:02:21Z",
+      "side": 1,
+      "message": "It\u0027s nice to have the trailing comma for future patching and consistency of all elements, since this line wouldn\u0027t have to be modified to add something after it.",
+      "parentUuid": "026208a3_cba0d277",
+      "revId": "0316481c8a71af88db050f2c8d3dd1001e50ed8c",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
+      "unresolved": false
     }
   ]
 }
