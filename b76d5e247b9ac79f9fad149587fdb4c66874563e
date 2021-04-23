@@ -69,6 +69,30 @@
       "revId": "b76d5e247b9ac79f9fad149587fdb4c66874563e",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8d58741_2d3f87f9",
+        "filename": "subprojects/cli11.wrap",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000188
+      },
+      "writtenOn": "2021-04-23T09:40:06Z",
+      "side": 1,
+      "message": "This might be a case for a common set of wrapfiles that we provide for all of openbmc though, that way we could pin / update them in one place.",
+      "parentUuid": "ba5d2070_7a8e0441",
+      "range": {
+        "startLine": 3,
+        "startChar": 11,
+        "endLine": 3,
+        "endChar": 15
+      },
+      "revId": "b76d5e247b9ac79f9fad149587fdb4c66874563e",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
+      "unresolved": false
     }
   ]
 }
