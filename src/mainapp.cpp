@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
             watchPostcodeMatch.emplace(
                 bus,
                 sdbusplus::bus::match::rules::propertiesChanged(
-                    "/xyz/openbmc_project/state/boot/raw",
+                    "/xyz/openbmc_project/state/boot/raw0",
                     "xyz.openbmc_project.State.Boot.Raw"),
                 std::bind(&Watchdog::resetTimeRemaining, std::ref(watchdog),
                           false));
