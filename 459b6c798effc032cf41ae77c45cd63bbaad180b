@@ -16,6 +16,24 @@
       "revId": "459b6c798effc032cf41ae77c45cd63bbaad180b",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35a2375d_77ac7512",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1000188
+      },
+      "writtenOn": "2021-05-12T19:21:41Z",
+      "side": 1,
+      "message": "We eventually need that change, but the other side doesn\u0027t even handle that yet\nhttps://gerrit.openbmc-project.xyz/c/openbmc/phosphor-host-postd/+/39195\n\nRight now I need to fix this regression.",
+      "parentUuid": "2a6b43eb_2cbcf74b",
+      "revId": "459b6c798effc032cf41ae77c45cd63bbaad180b",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
+      "unresolved": false
     }
   ]
 }
