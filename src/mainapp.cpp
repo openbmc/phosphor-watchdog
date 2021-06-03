@@ -130,9 +130,15 @@ int main(int argc, char* argv[])
                  "Should we reset the time remaining any time a postcode "
                  "is signaled.");
 
+    // Interval related options
     uint64_t minInterval = phosphor::watchdog::DEFAULT_MIN_INTERVAL_MS;
     app.add_option("-m,--min_interval", minInterval,
                    "Set minimum interval for watchdog in milliseconds");
+
+    // 0 to indicate to use default from PDI if not passed in
+    uint64_t defaultInterval = 0;
+    app.add_option("-d,--default_interval", defaultInterval,
+                   "Set default interval for watchdog in milliseconds");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -222,7 +228,8 @@ int main(int argc, char* argv[])
 
         // Create a watchdog object
         Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
-                          std::move(maybeFallback), minInterval);
+                          std::move(maybeFallback), minInterval,
+                          defaultInterval);
 
         std::optional<sdbusplus::bus::match::match> watchPostcodeMatch;
         if (watchPostcodes)

@@ -54,24 +54,35 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Constructs the Watchdog object
      *
-     *  @param[in] bus            - DBus bus to attach to.
-     *  @param[in] objPath        - Object path to attach to.
-     *  @param[in] event          - reference to sdeventplus::Event loop
-     *  @param[in] actionTargets  - map of systemd targets called on timeout
-     *  @param[in] fallback
+     *  @param[in] bus             - DBus bus to attach to.
+     *  @param[in] objPath         - Object path to attach to.
+     *  @param[in] event           - reference to sdeventplus::Event loop
+     *  @param[in] actionTargets   - map of systemd targets called on timeout
+     *  @param[in] fallback        - fallback watchdog
+     *  @param[in] minInterval     - minimum intervale value allowed
+     *  @param[in] defaultInterval - default interval to start with
      */
     Watchdog(sdbusplus::bus::bus& bus, const char* objPath,
              const sdeventplus::Event& event,
              ActionTargetMap&& actionTargetMap = {},
              std::optional<Fallback>&& fallback = std::nullopt,
-             uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS) :
+             uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS,
+             uint64_t defaultInterval = 0) :
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargetMap(std::move(actionTargetMap)),
         fallback(std::move(fallback)), minInterval(minInterval),
         timer(event, std::bind(&Watchdog::timeOutHandler, this))
     {
-        // We set the watchdog interval with the default value.
-        interval(interval());
+        // Use default if passed in otherwise just use default that comes
+        // with object
+        if (defaultInterval)
+        {
+            interval(defaultInterval);
+        }
+        else
+        {
+            interval(interval());
+        }
         // We need to poke the enable mechanism to make sure that the timer
         // enters the fallback state if the fallback is always enabled.
         tryFallbackOrDisable();
