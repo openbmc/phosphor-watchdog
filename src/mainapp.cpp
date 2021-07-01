@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
                    "Ex: xyz.openbmc_project.State.Watchdog.Host")
         ->required()
         ->group(serviceGroup);
-    bool continueAfterTimeout;
+    bool continueAfterTimeout{false};
     app.add_flag("-c,--continue", continueAfterTimeout,
                  "Continue daemon after watchdog timeout")
         ->group(serviceGroup);
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
             ->group(fallbackGroup);
     fallbackIntervalOpt->needs(fallbackActionOpt);
     fallbackActionOpt->needs(fallbackIntervalOpt);
-    bool fallbackAlways;
+    bool fallbackAlways{false};
     app.add_flag("-e,--fallback_always", fallbackAlways,
                  "Enables the "
                  "watchdog even when disabled by the dbus interface. "
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
         ->needs(fallbackIntervalOpt);
 
     // Should we watch for postcodes
-    bool watchPostcodes;
+    bool watchPostcodes{false};
     app.add_flag("-w,--watch_postcodes", watchPostcodes,
                  "Should we reset the time remaining any time a postcode "
                  "is signaled.");
