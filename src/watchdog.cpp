@@ -23,6 +23,12 @@ constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
 constexpr auto SYSTEMD_ROOT = "/org/freedesktop/systemd1";
 constexpr auto SYSTEMD_INTERFACE = "org.freedesktop.systemd1.Manager";
 
+constexpr auto IPMI_SEL_SERVICE = "xyz.openbmc_project.Logging.IPMI";
+constexpr auto IPMI_SEL_ROOT = "/xyz/openbmc_project/Logging/IPMI";
+constexpr auto IPMI_SEL_INTERFACE = "xyz.openbmc_project.Logging.IPMI";
+
+constexpr uint16_t SEL_BMC_GEN_ID = 0x0020;
+
 void Watchdog::resetTimeRemaining(bool enableWatchdog)
 {
     timeRemaining(interval());
@@ -130,6 +136,41 @@ void Watchdog::timeOutHandler()
             entry("ACTION=%s", convertForMessage(action).c_str()),
             entry("TIMER_USE=%s", convertForMessage(expiredTimerUse()).c_str()),
             entry("TARGET=%s", target->second.c_str()));
+
+        uint8_t eventData1;
+        switch (action)
+        {
+            case Action::None:
+                eventData1 = 0;
+                break;
+            case Action::HardReset:
+                eventData1 = 1;
+                break;
+            case Action::PowerOff:
+                eventData1 = 2;
+                break;
+            case Action::PowerCycle:
+                eventData1 = 3;
+                break;
+            default:
+                break;
+        }
+
+        try
+        {
+            std::string journalMsg("watchdog: Timed out");
+            auto method = bus.new_method_call(IPMI_SEL_SERVICE, IPMI_SEL_ROOT,
+                                              IPMI_SEL_INTERFACE, "IpmiSelAdd");
+            method.append(journalMsg);
+            method.append(objPath, std::vector<uint8_t>({eventData1, 0, 0}),
+                          true, selBMCGenID);
+            bus.call_noreply(method);
+        }
+        catch (const SdBusError& e)
+        {
+            log<level::ERR>("watchdog: Failed to add SEL log",
+                            entry("ERROR=%s", e.what()));
+        }
 
         try
         {
