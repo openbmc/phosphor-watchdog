@@ -6,6 +6,7 @@
 #include <sdbusplus/server/object.hpp>
 #include <sdeventplus/event.hpp>
 #include <sdeventplus/utility/timer.hpp>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
