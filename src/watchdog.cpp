@@ -5,6 +5,7 @@
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
 #include <sdbusplus/exception.hpp>
+#include <string_view>
 #include <xyz/openbmc_project/Common/error.hpp>
 
 namespace phosphor
@@ -130,6 +131,23 @@ void Watchdog::timeOutHandler()
             entry("ACTION=%s", convertForMessage(action).c_str()),
             entry("TIMER_USE=%s", convertForMessage(expiredTimerUse()).c_str()),
             entry("TARGET=%s", target->second.c_str()));
+
+        try
+        {
+            std::string_view expiredAction = convertForMessage(action).c_str();
+            expiredAction.remove_prefix(std::min(
+                expiredAction.find_last_of(".") + 1, expiredAction.size()));
+            auto signal =
+                bus.new_signal(objPath.data(), "xyz.openbmc_project.Watchdog",
+                               expiredAction.data());
+            signal.append("xyz.openbmc_project.State.Watchdog.Timeout");
+            signal.signal_send();
+        }
+        catch (const SdBusError& e)
+        {
+            log<level::ERR>("watchdog: failed to send timeout signal",
+                            entry("ERROR=%s", e.what()));
+        }
 
         try
         {

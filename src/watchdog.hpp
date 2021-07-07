@@ -6,6 +6,7 @@
 #include <sdbusplus/server/object.hpp>
 #include <sdeventplus/event.hpp>
 #include <sdeventplus/utility/timer.hpp>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
@@ -71,7 +72,8 @@ class Watchdog : public WatchdogInherits
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargetMap(std::move(actionTargetMap)),
         fallback(std::move(fallback)), minInterval(minInterval),
-        timer(event, std::bind(&Watchdog::timeOutHandler, this))
+        timer(event, std::bind(&Watchdog::timeOutHandler, this)),
+        objPath(objPath)
     {
         // Use default if passed in otherwise just use default that comes
         // with object
@@ -181,6 +183,9 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Attempt to enter the fallback watchdog or disables it */
     void tryFallbackOrDisable();
+
+    /** @brief Object path of the watchdog */
+    std::string_view objPath;
 };
 
 } // namespace watchdog
