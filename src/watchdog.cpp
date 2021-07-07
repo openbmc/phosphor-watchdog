@@ -43,6 +43,7 @@ bool Watchdog::enabled(bool value)
 
         // Attempt to fallback or disable our timer if needed
         tryFallbackOrDisable();
+        triggeredAction(Action::None, true);
 
         return false;
     }
@@ -52,6 +53,7 @@ bool Watchdog::enabled(bool value)
         timer.restart(milliseconds(interval_ms));
         log<level::INFO>("watchdog: enabled and started",
                          entry("INTERVAL=%llu", interval_ms));
+        triggeredAction(Action::None, true);
     }
 
     return WatchdogInherits::enabled(value);
@@ -131,6 +133,8 @@ void Watchdog::timeOutHandler()
             entry("TIMER_USE=%s", convertForMessage(expiredTimerUse()).c_str()),
             entry("TARGET=%s", target->second.c_str()));
 
+        triggeredAction(action);
+
         try
         {
             auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
@@ -162,12 +166,14 @@ void Watchdog::tryFallbackOrDisable()
         timer.restart(milliseconds(interval_ms));
         log<level::INFO>("watchdog: falling back",
                          entry("INTERVAL=%llu", interval_ms));
+        triggeredAction(Action::None, true);
     }
     else if (timerEnabled())
     {
         timer.setEnabled(false);
 
         log<level::INFO>("watchdog: disabled");
+        triggeredAction(Action::None, true);
     }
 
     // Make sure we accurately reflect our enabled state to the
