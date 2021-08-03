@@ -52,6 +52,24 @@
       "revId": "c2312af69a23a8cee66031b84027682c60b35f4f",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c42f72c_fd005eee",
+        "filename": "src/watchdog.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2021-08-03T20:31:59Z",
+      "side": 1,
+      "message": "I have only looked through how this timeout got triggered and the watchdog event monitor for now.\n\nWhen you mentioned broadcast some signal, do you just mean creating a object path like\n\n```\nobjPath + \"/timeout\"\n```\n\nobjPath is the current watchdog object.\n\nMaybe like\n\n/xyz/openbmc_project/watchdog/host0\n|__/xyz/openbmc_project/watchdog/host0/timeout\n\nand then just delete the path and create the path again when new timeout happens instead of creating new one everytime with `xyz.openbmc_project.State.Watchdog.Timeout` as one of the interface.\n\nIn the phosphor-sel-logger (watchdog monitor), it just watch that interface being added.\n\nMaybe something like that?",
+      "parentUuid": "3289dbf0_c0439690",
+      "revId": "c2312af69a23a8cee66031b84027682c60b35f4f",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
+      "unresolved": true
     }
   ]
 }
