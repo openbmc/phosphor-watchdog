@@ -70,6 +70,24 @@
       "revId": "c2312af69a23a8cee66031b84027682c60b35f4f",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "261cb441_5576d6aa",
+        "filename": "src/watchdog.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2021-08-04T21:26:08Z",
+      "side": 1,
+      "message": "ok, nevermind. The object path doesn\u0027t look like a good idea.\n\nI have created a new property under State.Watchdog.\n\nhttps://gerrit.openbmc-project.xyz/c/openbmc/phosphor-dbus-interfaces/+/45621\n\nand updated the SEL logger to use it to pose the logs.\n\nhttps://gerrit.openbmc-project.xyz/c/openbmc/phosphor-sel-logger/+/45622",
+      "parentUuid": "6c42f72c_fd005eee",
+      "revId": "c2312af69a23a8cee66031b84027682c60b35f4f",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
+      "unresolved": true
     }
   ]
 }
