@@ -106,6 +106,24 @@
       "revId": "c2312af69a23a8cee66031b84027682c60b35f4f",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6dc42d9f_767c41dd",
+        "filename": "src/watchdog.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2021-08-05T23:31:02Z",
+      "side": 1,
+      "message": "ok, I have updated/tested it to make sure that it works with signal.\n\nShould be a lot better now.\n\nThe phosphor-sel-logger side in\nhttps://gerrit.openbmc-project.xyz/c/openbmc/phosphor-sel-logger/+/45622/\n\nPTAL",
+      "parentUuid": "41c16656_4c9d8ef8",
+      "revId": "c2312af69a23a8cee66031b84027682c60b35f4f",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4",
+      "unresolved": true
     }
   ]
 }
