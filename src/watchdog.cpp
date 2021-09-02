@@ -16,7 +16,6 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace phosphor::logging;
 
-using sdbusplus::exception::SdBusError;
 using sdbusplus::xyz::openbmc_project::Common::Error::InternalFailure;
 
 // systemd service to kick start a target.
@@ -139,7 +138,7 @@ void Watchdog::timeOutHandler()
             signal.append(convertForMessage(action).c_str());
             signal.signal_send();
         }
-        catch (const SdBusError& e)
+        catch (const sdbusplus::exception::exception& e)
         {
             log<level::ERR>("watchdog: failed to send timeout signal",
                             entry("ERROR=%s", e.what()));
@@ -154,7 +153,7 @@ void Watchdog::timeOutHandler()
 
             bus.call_noreply(method);
         }
-        catch (const SdBusError& e)
+        catch (const sdbusplus::exception::exception& e)
         {
             log<level::ERR>("watchdog: Failed to start unit",
                             entry("TARGET=%s", target->second.c_str()),
