@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
             event.run(std::nullopt);
         }
     }
-    catch (InternalFailure& e)
+    catch (const InternalFailure& e)
     {
         phosphor::logging::commit<InternalFailure>();
 
