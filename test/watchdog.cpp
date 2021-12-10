@@ -279,8 +279,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     fallback.always = false;
     wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
-                                      Watchdog::ActionTargetMap(),
-                                      std::move(fallback));
+                                      Watchdog::ActionTargetMap(), fallback);
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
@@ -362,8 +361,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     fallback.always = false;
     wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
-                                      Watchdog::ActionTargetMap(),
-                                      std::move(fallback));
+                                      Watchdog::ActionTargetMap(), fallback);
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
@@ -416,8 +414,7 @@ TEST_F(WdogTest, enableWdogWithFallbackResetTimerEnable)
     fallback.always = false;
     wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
-                                      Watchdog::ActionTargetMap(),
-                                      std::move(fallback));
+                                      Watchdog::ActionTargetMap(), fallback);
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());

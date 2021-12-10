@@ -71,7 +71,7 @@ class Watchdog : public WatchdogInherits
              uint64_t defaultInterval = 0) :
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargetMap(std::move(actionTargetMap)),
-        fallback(std::move(fallback)), minInterval(minInterval),
+        fallback(fallback), minInterval(minInterval),
         timer(event, std::bind(&Watchdog::timeOutHandler, this)),
         objPath(objPath)
     {
@@ -148,7 +148,7 @@ class Watchdog : public WatchdogInherits
      *  @return: interval that was set
      *
      */
-    uint64_t interval(uint64_t value);
+    uint64_t interval(uint64_t value) override;
 
     /** @brief Tells if the referenced timer is expired or not */
     inline auto timerExpired() const

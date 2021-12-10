@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
         fallback.always = fallbackAlways;
 
         printFallback(fallback);
-        maybeFallback = std::move(fallback);
+        maybeFallback = fallback;
     }
 
     try
@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
         auto bus = sdbusplus::bus::new_default();
 
         // Add systemd object manager.
-        sdbusplus::server::manager::manager(bus, path.c_str());
+        sdbusplus::server::manager::manager watchdogManager(bus, path.c_str());
 
         // Attach the bus to sd_event to service user requests
         bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
