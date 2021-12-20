@@ -27,6 +27,8 @@
 #include <sdbusplus/exception.hpp>
 #include <sdbusplus/server/manager.hpp>
 #include <sdeventplus/event.hpp>
+#include <sdeventplus/source/signal.hpp>
+#include <stdplus/signal.hpp>
 #include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
 
@@ -246,8 +248,17 @@ int main(int argc, char* argv[])
         // Claim the bus
         bus.request_name(service.c_str());
 
+        bool done = false;
+        auto intCb = [&](sdeventplus::source::Signal&,
+                         const struct signalfd_siginfo*) { done = true; };
+        stdplus::signal::block(SIGINT);
+        sdeventplus::source::Signal(event, SIGINT, intCb).set_floating(true);
+        stdplus::signal::block(SIGTERM);
+        sdeventplus::source::Signal(event, SIGTERM, std::move(intCb))
+            .set_floating(true);
+
         // Loop until our timer expires and we don't want to continue
-        while (continueAfterTimeout || !watchdog.timerExpired())
+        while (!done && (continueAfterTimeout || !watchdog.timerExpired()))
         {
             // Run and never timeout
             event.run(std::nullopt);
