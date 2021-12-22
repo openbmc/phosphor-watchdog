@@ -19,6 +19,7 @@
 #include <CLI/CLI.hpp>
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <phosphor-logging/elog-errors.hpp>
 #include <phosphor-logging/elog.hpp>
