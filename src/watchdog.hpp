@@ -65,13 +65,13 @@ class Watchdog : public WatchdogInherits
      */
     Watchdog(sdbusplus::bus::bus& bus, const char* objPath,
              const sdeventplus::Event& event,
-             ActionTargetMap&& actionTargetMap = {},
-             std::optional<Fallback>&& fallback = std::nullopt,
+             const ActionTargetMap& actionTargetMap = {},
+             std::optional<Fallback> fallback = std::nullopt,
              uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS,
              uint64_t defaultInterval = 0) :
         WatchdogInherits(bus, objPath),
-        bus(bus), actionTargetMap(std::move(actionTargetMap)),
-        fallback(fallback), minInterval(minInterval),
+        bus(bus), actionTargetMap(actionTargetMap), fallback(fallback),
+        minInterval(minInterval),
         timer(event, std::bind(&Watchdog::timeOutHandler, this)),
         objPath(objPath)
     {
