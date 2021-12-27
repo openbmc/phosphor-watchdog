@@ -1,6 +1,7 @@
 #include "watchdog.hpp"
 
-#include <algorithm>
+#include <fmt/format.h>
+
 #include <chrono>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
@@ -23,6 +24,99 @@ constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
 constexpr auto SYSTEMD_ROOT = "/org/freedesktop/systemd1";
 constexpr auto SYSTEMD_INTERFACE = "org.freedesktop.systemd1.Manager";
 
+void Watchdog::initService()
+{
+    if (!conn)
+    {
+        return;
+    }
+
+    sdbusplus::asio::object_server watchdogServer =
+        sdbusplus::asio::object_server(conn);
+    watchdog = watchdogServer.add_interface(
+        objPath.data(), "xyz.openbmc_project.State.Watchdog");
+
+    watchdog->register_method(
+        "ResetTimeRemaining",
+        [this](bool enableWatchdog) { resetTimeRemaining(enableWatchdog); });
+    watchdog->register_property(
+        "CurrentTimerUse",
+        WatchdogBase::convertTimerUseToString(watchdogCurrentTimerUse),
+        [this](const std::string& timer, std::string& resp) -> int {
+            auto nextTimer = WatchdogBase::convertStringToTimerUse(timer);
+            if (!nextTimer)
+            {
+                return 1;
+            }
+            watchdogCurrentTimerUse = *nextTimer;
+            resp = timer;
+
+            return 0;
+        });
+    watchdog->register_property(
+        "Enabled", watchdogEnabled,
+        [this](bool value, bool& resp) {
+            resp = enabled(value);
+            return 0;
+        },
+        [this](bool) { return watchdogEnabled; });
+
+    watchdog->register_property(
+        "ExpireAction",
+        WatchdogBase::convertActionToString(watchdogExpireAction),
+        [this](const std::string& action, std::string& resp) {
+            auto nextAction = WatchdogBase::convertStringToAction(action);
+            if (!nextAction)
+            {
+                return 1;
+            }
+            watchdogExpireAction = *nextAction;
+            resp = action;
+            return 0;
+        });
+    watchdog->register_property(
+        "ExpiredTimerUse",
+        WatchdogBase::convertTimerUseToString(watchdogExpiredTimerUse),
+        [this](const std::string& timer, std::string& resp) -> int {
+            auto nextTimer = WatchdogBase::convertStringToTimerUse(timer);
+            if (!nextTimer)
+            {
+                return 1;
+            }
+
+            watchdogExpiredTimerUse = *nextTimer;
+            resp = timer;
+            return 0;
+        });
+    watchdog->register_property("Initialized", watchdogInitialized,
+                                [this](bool initialized, bool& resp) -> int {
+                                    watchdogInitialized = initialized;
+                                    resp = watchdogInitialized;
+                                    return 0;
+                                });
+    watchdog->register_property("Interval", watchdogInterval,
+                                [this](uint64_t value, uint64_t& resp) -> int {
+                                    resp = interval(value);
+                                    return 0;
+                                });
+    watchdog->register_property(
+        "TimeRemaining", watchdogTimeRemaining,
+        [this](uint64_t value, uint64_t& resp) -> int {
+            auto out = timeRemaining(value);
+            if (!out)
+            {
+                return 1;
+            }
+            resp = *out;
+            return 0;
+        },
+        [this](uint64_t) -> uint64_t { return timeRemaining(); });
+
+    watchdog->register_signal<std::string>(std::string("Timeout"));
+
+    watchdog->initialize();
+}
+
 void Watchdog::resetTimeRemaining(bool enableWatchdog)
 {
     timeRemaining(interval());
@@ -39,22 +133,22 @@ bool Watchdog::enabled(bool value)
     {
         // Make sure we accurately reflect our enabled state to the
         // tryFallbackOrDisable() call
-        WatchdogInherits::enabled(value);
+        watchdogEnabled = value;
 
         // Attempt to fallback or disable our timer if needed
         tryFallbackOrDisable();
 
         return false;
     }
-    else if (!this->enabled())
+    else if (!watchdogEnabled)
     {
-        auto interval_ms = this->interval();
+        auto interval_ms = watchdogInterval;
         timer.restart(milliseconds(interval_ms));
         log<level::INFO>("watchdog: enabled and started",
                          entry("INTERVAL=%llu", interval_ms));
     }
-
-    return WatchdogInherits::enabled(value);
+    watchdogEnabled = value;
+    return watchdogEnabled;
 }
 
 // Get the remaining time before timer expires.
@@ -71,15 +165,15 @@ uint64_t Watchdog::timeRemaining() const
 }
 
 // Reset the timer to a new expiration value
-uint64_t Watchdog::timeRemaining(uint64_t value)
+std::optional<uint64_t> Watchdog::timeRemaining(uint64_t value)
 {
     if (!timerEnabled())
     {
         // We don't need to update the timer because it is off
-        return 0;
+        return std::nullopt;
     }
 
-    if (this->enabled())
+    if (watchdogEnabled)
     {
         // Update interval to minInterval if applicable
         value = std::max(value, minInterval);
@@ -95,45 +189,52 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
     timer.setRemaining(milliseconds(value));
 
     // Update Base class data.
-    return WatchdogInherits::timeRemaining(value);
+    watchdogTimeRemaining = value;
+    return watchdogTimeRemaining;
 }
 
 // Set value of Interval
 uint64_t Watchdog::interval(uint64_t value)
 {
-    return WatchdogInherits::interval(std::max(value, minInterval));
+    auto nextValue = std::max(value, minInterval);
+    watchdogInterval = nextValue;
+    return watchdogInterval;
 }
 
 // Optional callback function on timer expiration
 void Watchdog::timeOutHandler()
 {
-    Action action = expireAction();
-    if (!this->enabled())
+    std::cerr Action action = watchdogExpireAction;
+    if (!enabled())
     {
         action = fallback->action;
     }
 
-    expiredTimerUse(currentTimerUse());
+    watchdog->set_property(
+        "ExpiredTimerUse",
+        WatchdogBase::convertTimerUseToString(watchdogCurrentTimerUse));
 
     auto target = actionTargetMap.find(action);
     if (target == actionTargetMap.end())
     {
-        log<level::INFO>("watchdog: Timed out with no target",
-                         entry("ACTION=%s", convertForMessage(action).c_str()),
-                         entry("TIMER_USE=%s",
-                               convertForMessage(expiredTimerUse()).c_str()));
+        log<level::INFO>(
+            "watchdog: Timed out with no target",
+            entry("ACTION=%s", convertForMessage(action).c_str()),
+            entry("TIMER_USE=%s",
+                  convertForMessage(watchdogExpiredTimerUse).c_str()));
     }
     else
     {
         log<level::INFO>(
             "watchdog: Timed out",
             entry("ACTION=%s", convertForMessage(action).c_str()),
-            entry("TIMER_USE=%s", convertForMessage(expiredTimerUse()).c_str()),
+            entry("TIMER_USE=%s",
+                  convertForMessage(watchdogExpiredTimerUse).c_str()),
             entry("TARGET=%s", target->second.c_str()));
 
         try
         {
-            auto signal = bus.new_signal(
+            auto signal = conn->new_signal(
                 objPath.data(), "xyz.openbmc_project.Watchdog", "Timeout");
             signal.append(convertForMessage(action).c_str());
             signal.signal_send();
@@ -146,12 +247,12 @@ void Watchdog::timeOutHandler()
 
         try
         {
-            auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
-                                              SYSTEMD_INTERFACE, "StartUnit");
+            auto method = conn->new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
+                                                SYSTEMD_INTERFACE, "StartUnit");
             method.append(target->second);
             method.append("replace");
 
-            bus.call_noreply(method);
+            conn->call_noreply(method);
         }
         catch (const sdbusplus::exception::exception& e)
         {
@@ -179,13 +280,12 @@ void Watchdog::tryFallbackOrDisable()
     else if (timerEnabled())
     {
         timer.setEnabled(false);
-
         log<level::INFO>("watchdog: disabled");
     }
 
     // Make sure we accurately reflect our enabled state to the
     // dbus interface.
-    WatchdogInherits::enabled(false);
+    watchdogEnabled = false;
 }
 
 } // namespace watchdog
