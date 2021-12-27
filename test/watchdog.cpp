@@ -1,9 +1,10 @@
 #include "watchdog.hpp"
 
+#include <fmt/format.h>
+
 #include <chrono>
 #include <memory>
 #include <sdbusplus/bus.hpp>
-#include <sdeventplus/event.hpp>
 #include <thread>
 #include <utility>
 
@@ -29,25 +30,18 @@ class WdogTest : public ::testing::Test
 
     // Gets called as part of each TEST_F construction
     WdogTest() :
-        event(sdeventplus::Event::get_default()),
-        bus(sdbusplus::bus::new_default()),
         wdog(std::make_unique<Watchdog>(
-            bus, TEST_PATH, event, Watchdog::ActionTargetMap(), std::nullopt,
+            io, nullptr, TEST_PATH, Watchdog::ActionTargetMap(), std::nullopt,
             milliseconds(TEST_MIN_INTERVAL).count())),
-
         defaultInterval(Quantum(3))
-
     {
         wdog->interval(milliseconds(defaultInterval).count());
         // Initially the watchdog would be disabled
         EXPECT_FALSE(wdog->enabled());
     }
 
-    // sdevent Event handle
-    sdeventplus::Event event;
-
-    // sdbusplus handle
-    sdbusplus::bus::bus bus;
+    // ASIO Service
+    boost::asio::io_context io;
 
     // Watchdog object
     std::unique_ptr<Watchdog> wdog;
@@ -65,22 +59,11 @@ class WdogTest : public ::testing::Test
     // disabled or have its timeRemaining reset.
     Quantum waitForWatchdog(Quantum timeLimit)
     {
-        auto previousTimeRemaining = wdog->timeRemaining();
-        auto ret = Quantum(0);
-        while (ret < timeLimit &&
-               previousTimeRemaining >= wdog->timeRemaining() &&
-               wdog->timerEnabled())
-        {
-            previousTimeRemaining = wdog->timeRemaining();
-
-            constexpr auto sleepTime = Quantum(1);
-            if (event.run(sleepTime) == 0)
-            {
-                ret += sleepTime;
-            }
-        }
-
-        return ret;
+        io.restart();
+        auto current = std::chrono::steady_clock::now();
+        boost::asio::steady_timer timer(io, timeLimit);
+        io.run();
+        return std::chrono::duration_cast<Quantum>(timer.expiry() - current);
     }
 };
 
@@ -103,7 +86,7 @@ TEST_F(WdogTest, createWdogAndDontEnable)
     EXPECT_EQ(newIntervalMs, wdog->interval());
 
     // We won't be able to configure timeRemaining
-    EXPECT_EQ(0, wdog->timeRemaining(1000));
+    EXPECT_EQ(std::nullopt, wdog->timeRemaining(1000));
     EXPECT_EQ(0, wdog->timeRemaining());
 
     // Timer should not have become enabled
@@ -197,7 +180,7 @@ TEST_F(WdogTest, enableWdogAndResetTo5Quantums)
     EXPECT_EQ(expireTimeMs, wdog->timeRemaining(expireTimeMs));
 
     // Waiting for expiration
-    EXPECT_EQ(expireTime - Quantum(1), waitForWatchdog(expireTime));
+    EXPECT_EQ(expireTime, waitForWatchdog(expireTime));
     EXPECT_TRUE(wdog->timerExpired());
     EXPECT_FALSE(wdog->timerEnabled());
 }
@@ -250,7 +233,7 @@ TEST_F(WdogTest, enableWdogAndWaitTillEnd)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    EXPECT_EQ(defaultInterval - Quantum(1), waitForWatchdog(defaultInterval));
+    EXPECT_EQ(defaultInterval, waitForWatchdog(defaultInterval));
 
     EXPECT_FALSE(wdog->enabled());
     EXPECT_EQ(0, wdog->timeRemaining());
@@ -278,7 +261,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = false;
     wdog.reset();
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
+    wdog = std::make_unique<Watchdog>(io, nullptr, TEST_PATH,
                                       Watchdog::ActionTargetMap(), fallback);
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
@@ -288,7 +271,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
+    EXPECT_EQ(primaryInterval, waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -323,7 +306,7 @@ TEST_F(WdogTest, enableWdogWithFallbackTillEnd)
     EXPECT_TRUE(wdog->timerEnabled());
 
     // Waiting fallback expiration
-    EXPECT_EQ(fallbackInterval - Quantum(1), waitForWatchdog(fallbackInterval));
+    EXPECT_EQ(fallbackInterval, waitForWatchdog(fallbackInterval));
 
     // We should now have disabled the watchdog after the fallback expires
     EXPECT_FALSE(wdog->enabled());
@@ -360,7 +343,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = false;
     wdog.reset();
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
+    wdog = std::make_unique<Watchdog>(io, nullptr, TEST_PATH,
                                       Watchdog::ActionTargetMap(), fallback);
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
@@ -372,7 +355,7 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
+    EXPECT_EQ(primaryInterval, waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -393,7 +376,8 @@ TEST_F(WdogTest, enableWdogWithFallbackReEnable)
 
 /** @brief Make sure the watchdog is started and enabled with a fallback
  *         Wait through the initial trip and ensure the fallback is observed
- *         Make sure that changing the primary interval and calling reset timer
+ *         Make sure that changing the primary interval and calling reset
+ timer
  *         will enable the primary watchdog with primary interval.
  */
 TEST_F(WdogTest, enableWdogWithFallbackResetTimerEnable)
@@ -413,7 +397,7 @@ TEST_F(WdogTest, enableWdogWithFallbackResetTimerEnable)
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = false;
     wdog.reset();
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
+    wdog = std::make_unique<Watchdog>(io, nullptr, TEST_PATH,
                                       Watchdog::ActionTargetMap(), fallback);
     EXPECT_EQ(primaryInterval, milliseconds(wdog->interval(primaryIntervalMs)));
     EXPECT_FALSE(wdog->enabled());
@@ -425,7 +409,7 @@ TEST_F(WdogTest, enableWdogWithFallbackResetTimerEnable)
     EXPECT_TRUE(wdog->enabled(true));
 
     // Waiting default expiration
-    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
+    EXPECT_EQ(primaryInterval, waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -470,7 +454,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     fallback.interval = static_cast<uint64_t>(fallbackIntervalMs);
     fallback.always = true;
     wdog.reset();
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
+    wdog = std::make_unique<Watchdog>(io, nullptr, TEST_PATH,
                                       Watchdog::ActionTargetMap(), fallback,
                                       milliseconds(TEST_MIN_INTERVAL).count());
 
@@ -491,7 +475,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_GE(primaryInterval, milliseconds(wdog->timeRemaining()));
 
     // Waiting default expiration
-    EXPECT_EQ(primaryInterval - Quantum(1), waitForWatchdog(primaryInterval));
+    EXPECT_EQ(primaryInterval, waitForWatchdog(primaryInterval));
 
     // We should now have entered the fallback once the primary expires
     EXPECT_FALSE(wdog->enabled());
@@ -502,7 +486,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
     EXPECT_TRUE(wdog->timerEnabled());
 
     // Waiting fallback expiration
-    EXPECT_EQ(fallbackInterval - Quantum(1), waitForWatchdog(fallbackInterval));
+    EXPECT_EQ(fallbackInterval, waitForWatchdog(fallbackInterval));
 
     // We should now enter the fallback again
     EXPECT_FALSE(wdog->enabled());
@@ -542,7 +526,7 @@ TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
 {
     // Initiate default Watchdog and get the default interval value.
     wdog.reset();
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event);
+    wdog = std::make_unique<Watchdog>(io, nullptr, TEST_PATH);
     auto defaultIntervalMs = wdog->interval();
     auto defaultInterval = milliseconds(defaultIntervalMs);
     auto minInterval = defaultInterval + Quantum(30);
@@ -551,7 +535,7 @@ TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
     // We initiate a new Watchdog with min interval greater than the default
     // intrval
     wdog.reset();
-    wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
+    wdog = std::make_unique<Watchdog>(io, nullptr, TEST_PATH,
                                       Watchdog::ActionTargetMap(), std::nullopt,
                                       minIntervalMs);
     // Check that the interval was set to the minInterval
@@ -564,7 +548,7 @@ TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
 
     // Set remaining time shorter than minInterval will actually set it to
     // minInterval
-    auto remaining = milliseconds(wdog->timeRemaining(defaultIntervalMs));
+    auto remaining = milliseconds(*(wdog->timeRemaining(defaultIntervalMs)));
 
     // Its possible that we are off by few msecs depending on
     // how we get scheduled. So checking a range here.
