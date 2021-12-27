@@ -17,18 +17,18 @@
 #include "watchdog.hpp"
 
 #include <CLI/CLI.hpp>
-#include <functional>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <iostream>
 #include <optional>
 #include <phosphor-logging/elog-errors.hpp>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
+#include <sdbusplus/asio/connection.hpp>
+#include <sdbusplus/asio/object_server.hpp>
 #include <sdbusplus/bus.hpp>
+#include <sdbusplus/bus/match.hpp>
 #include <sdbusplus/exception.hpp>
-#include <sdbusplus/server/manager.hpp>
-#include <sdeventplus/event.hpp>
-#include <sdeventplus/source/signal.hpp>
-#include <stdplus/signal.hpp>
 #include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
 
@@ -216,28 +216,23 @@ int main(int argc, char* argv[])
 
     try
     {
-        // Get a default event loop
-        auto event = sdeventplus::Event::get_default();
-
-        // Get a handle to system dbus.
-        auto bus = sdbusplus::bus::new_default();
+        boost::asio::io_context io;
+        auto conn = std::make_shared<sdbusplus::asio::connection>(io);
 
         // Add systemd object manager.
-        sdbusplus::server::manager::manager watchdogManager(bus, path.c_str());
-
-        // Attach the bus to sd_event to service user requests
-        bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+        sdbusplus::server::manager::manager watchdogManager(*conn,
+                                                            path.c_str());
 
         // Create a watchdog object
-        Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
+        Watchdog watchdog(io, conn, path.c_str(), std::move(actionTargetMap),
                           std::move(maybeFallback), minInterval,
-                          defaultInterval);
+                          defaultInterval, continueAfterTimeout);
 
         std::optional<sdbusplus::bus::match::match> watchPostcodeMatch;
         if (watchPostcodes)
         {
             watchPostcodeMatch.emplace(
-                bus,
+                *conn,
                 sdbusplus::bus::match::rules::propertiesChanged(
                     "/xyz/openbmc_project/state/boot/raw0",
                     "xyz.openbmc_project.State.Boot.Raw"),
@@ -246,28 +241,18 @@ int main(int argc, char* argv[])
         }
 
         // Claim the bus
-        bus.request_name(service.c_str());
+        conn->request_name(service.c_str());
 
-        bool done = false;
-        auto intCb = [&](sdeventplus::source::Signal&,
-                         const struct signalfd_siginfo*) { done = true; };
-        stdplus::signal::block(SIGINT);
-        sdeventplus::source::Signal sigint(event, SIGINT, intCb);
-        stdplus::signal::block(SIGTERM);
-        sdeventplus::source::Signal sigterm(event, SIGTERM, std::move(intCb));
+        boost::asio::signal_set signal(io, SIGINT, SIGTERM);
+        signal.async_wait([&io](const boost::system::error_code& ec, int) {
+            if (!ec)
+            {
+                io.stop();
+            }
+        });
 
         // Loop until our timer expires and we don't want to continue
-        while (!done && (continueAfterTimeout || !watchdog.timerExpired()))
-        {
-            // Process all outstanding bus events before running the loop.
-            // This prevents the sd-bus handling logic from leaking memory.
-            // TODO: Remove when upstream fixes this bug
-            while (bus.process_discard() > 0)
-                ;
-
-            // Run and never timeout
-            event.run(std::nullopt);
-        }
+        io.run();
     }
     catch (const InternalFailure& e)
     {
