@@ -1,14 +1,19 @@
 #pragma once
 
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <chrono>
 #include <functional>
+#include <memory>
 #include <optional>
-#include <sdbusplus/bus.hpp>
+#include <sdbusplus/asio/connection.hpp>
+#include <sdbusplus/asio/object_server.hpp>
 #include <sdbusplus/server/object.hpp>
-#include <sdeventplus/event.hpp>
-#include <sdeventplus/utility/timer.hpp>
 #include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
+#include <vector>
 #include <xyz/openbmc_project/State/Watchdog/server.hpp>
 
 namespace phosphor
@@ -17,15 +22,14 @@ namespace watchdog
 {
 
 constexpr auto DEFAULT_MIN_INTERVAL_MS = 0;
-namespace Base = sdbusplus::xyz::openbmc_project::State::server;
-using WatchdogInherits = sdbusplus::server::object::object<Base::Watchdog>;
+using WatchdogBase = sdbusplus::xyz::openbmc_project::State::server::Watchdog;
 
 /** @class Watchdog
  *  @brief OpenBMC watchdog implementation.
  *  @details A concrete implementation for the
  *  xyz.openbmc_project.State.Watchdog DBus API.
  */
-class Watchdog : public WatchdogInherits
+class Watchdog
 {
   public:
     Watchdog() = delete;
@@ -34,6 +38,13 @@ class Watchdog : public WatchdogInherits
     Watchdog& operator=(const Watchdog&) = delete;
     Watchdog(Watchdog&&) = delete;
     Watchdog& operator=(Watchdog&&) = delete;
+
+    /** @brief Type used to hold the name of a Watchdog Action.
+     */
+    using Action = WatchdogBase::Action;
+    /** @brief Type used to hold the name of a Watchdog Timer.
+     */
+    using TimerUse = WatchdogBase::TimerUse;
 
     /** @brief Type used to hold the name of a systemd target.
      */
@@ -55,7 +66,8 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Constructs the Watchdog object
      *
-     *  @param[in] bus             - DBus bus to attach to.
+     *  @param[in] io              - Async IO Service
+     *  @param[in] conn            - Dbus connection for Async IO.
      *  @param[in] objPath         - Object path to attach to.
      *  @param[in] event           - reference to sdeventplus::Event loop
      *  @param[in] actionTargets   - map of systemd targets called on timeout
@@ -63,18 +75,20 @@ class Watchdog : public WatchdogInherits
      *  @param[in] minInterval     - minimum intervale value allowed
      *  @param[in] defaultInterval - default interval to start with
      */
-    Watchdog(sdbusplus::bus::bus& bus, const char* objPath,
-             const sdeventplus::Event& event,
-             ActionTargetMap&& actionTargetMap = {},
+    Watchdog(boost::asio::io_service& io,
+             const std::shared_ptr<sdbusplus::asio::connection>& conn,
+             const char* objPath,
+             Watchdog::ActionTargetMap&& actionTargetMap = {},
              std::optional<Fallback>&& fallback = std::nullopt,
              uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS,
              uint64_t defaultInterval = 0) :
-        WatchdogInherits(bus, objPath),
-        bus(bus), actionTargetMap(std::move(actionTargetMap)),
-        fallback(fallback), minInterval(minInterval),
-        timer(event, std::bind(&Watchdog::timeOutHandler, this)),
-        objPath(objPath)
+        conn(conn),
+        actionTargetMap(std::move(actionTargetMap)), fallback(fallback),
+        minInterval(minInterval), asyncTimer(io), objPath(objPath)
     {
+        // Setup all Watchdog State properties.
+        initService();
+
         // Use default if passed in otherwise just use default that comes
         // with object
         if (defaultInterval)
@@ -83,8 +97,13 @@ class Watchdog : public WatchdogInherits
         }
         else
         {
-            interval(interval());
+            interval(watchdogInterval);
         }
+
+        // Start Watchdog Timer
+        asyncTimer.expires_after(std::chrono::seconds(watchdogInterval));
+        asyncTimer.async_wait([this](const auto& e) { timeOutHandler(e); });
+
         // We need to poke the enable mechanism to make sure that the timer
         // enters the fallback state if the fallback is always enabled.
         tryFallbackOrDisable();
@@ -95,13 +114,7 @@ class Watchdog : public WatchdogInherits
      *
      *  @param[in] enableWatchdog - Should the call enable the watchdog
      */
-    void resetTimeRemaining(bool enableWatchdog) override;
-
-    /** @brief Since we are overriding the setter-enabled but not the
-     *         getter-enabled, we need to have this using in order to
-     *         allow passthrough usage of the getter-enabled.
-     */
-    using Base::Watchdog::enabled;
+    void resetTimeRemaining(bool enableWatchdog);
 
     /** @brief Enable or disable watchdog
      *         If a watchdog state is changed from disable to enable,
@@ -112,16 +125,16 @@ class Watchdog : public WatchdogInherits
      *
      *  @param[in] value - 'true' to enable. 'false' to disable
      *
-     *  @return : applied value if success, previous value otherwise
+     *  @return : applied value if success, std::nullopt otherwise
      */
-    bool enabled(bool value) override;
+    std::optional<bool> enabled(bool value);
 
     /** @brief Gets the remaining time before watchdog expires.
      *
      *  @return 0 if watchdog is expired.
      *          Remaining time in milliseconds otherwise.
      */
-    uint64_t timeRemaining() const override;
+    uint64_t timeRemaining() const;
 
     /** @brief Reset timer to expire after new timeout in milliseconds.
      *
@@ -129,42 +142,37 @@ class Watchdog : public WatchdogInherits
      *                     the watchdog will expire
      *
      *  @return: updated timeout value if watchdog is enabled.
-     *           0 otherwise.
+     *           std::nullopt otherwise.
      */
-    uint64_t timeRemaining(uint64_t value) override;
-
-    /** @brief Get value of Interval
-     *
-     *
-     *  @return: current interval
-     *
-     */
-    using WatchdogInherits::interval;
+    std::optional<uint64_t> timeRemaining(uint64_t value);
 
     /** @brief Set value of Interval
      *
      *  @param[in] value - interval time to set
      *
-     *  @return: interval that was set
+     *  @return: interval that was set if success, std::nullopt otherwise.
      *
      */
-    uint64_t interval(uint64_t value) override;
+    std::optional<uint64_t> interval(uint64_t value);
 
     /** @brief Tells if the referenced timer is expired or not */
     inline auto timerExpired() const
     {
-        return timer.hasExpired();
+        return watchdogTimerEnabled;
     }
 
     /** @brief Tells if the timer is running or not */
     inline bool timerEnabled() const
     {
-        return timer.isEnabled();
+        auto expireTime = asyncTimer.expiry();
+        return expireTime < std::chrono::steady_clock::now();
     }
 
   private:
-    /** @brief sdbusplus handle */
-    sdbusplus::bus::bus& bus;
+    void initService();
+
+    /** @brief Dbus connection for Async IO */
+    std::shared_ptr<sdbusplus::asio::connection> conn;
 
     /** @brief Map of systemd units to be started when the timer expires */
     ActionTargetMap actionTargetMap;
@@ -176,16 +184,44 @@ class Watchdog : public WatchdogInherits
     uint64_t minInterval;
 
     /** @brief Contained timer object */
-    sdeventplus::utility::Timer<sdeventplus::ClockId::Monotonic> timer;
+    boost::asio::steady_timer asyncTimer;
 
-    /** @brief Optional Callback handler on timer expirartion */
-    void timeOutHandler();
+    /** @brief Optional Callback handler on timer expiration */
+    void timeOutHandler(const boost::system::error_code& e);
 
     /** @brief Attempt to enter the fallback watchdog or disables it */
     void tryFallbackOrDisable();
 
     /** @brief Object path of the watchdog */
+
     std::string_view objPath;
+
+    /** @brief Watchdog State Properties */
+    std::shared_ptr<sdbusplus::asio::dbus_interface> watchdog;
+
+    /** @brief Watchdog Reset Interval */
+    uint64_t watchdogInterval;
+
+    /** @brief Watchdog Time Remaining */
+    uint64_t watchdogTimeRemaining;
+
+    /** @brief Watchdog Initialization State */
+    bool watchdogInitialized;
+
+    /** @brief Watchdog Enabled State */
+    bool watchdogEnabled;
+
+    /** @brief Watchdog Timer Enabled State */
+    bool watchdogTimerEnabled;
+
+    /** @brief Watchdog Expire Action */
+    Action watchdogExpireAction;
+
+    /** @brief Watchdog Current Timer */
+    TimerUse watchdogCurrentTimerUse;
+
+    /** @brief Watchdog Expire Timer */
+    TimerUse watchdogExpiredTimerUse;
 };
 
 } // namespace watchdog

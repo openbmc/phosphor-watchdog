@@ -17,22 +17,23 @@
 #include "watchdog.hpp"
 
 #include <CLI/CLI.hpp>
+#include <boost/asio/io_service.hpp>
 #include <functional>
 #include <iostream>
 #include <optional>
 #include <phosphor-logging/elog-errors.hpp>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
+#include <sdbusplus/asio/connection.hpp>
+#include <sdbusplus/asio/object_server.hpp>
 #include <sdbusplus/bus.hpp>
+#include <sdbusplus/bus/match.hpp>
 #include <sdbusplus/exception.hpp>
-#include <sdbusplus/server/manager.hpp>
-#include <sdeventplus/event.hpp>
-#include <sdeventplus/source/signal.hpp>
-#include <stdplus/signal.hpp>
 #include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
 
 using phosphor::watchdog::Watchdog;
+using phosphor::watchdog::WatchdogBase;
 using sdbusplus::xyz::openbmc_project::State::server::convertForMessage;
 
 void printActionTargetMap(const Watchdog::ActionTargetMap& actionTargetMap)
@@ -150,9 +151,9 @@ int main(int argc, char* argv[])
     Watchdog::ActionTargetMap actionTargetMap;
     if (target)
     {
-        actionTargetMap[Watchdog::Action::HardReset] = *target;
-        actionTargetMap[Watchdog::Action::PowerOff] = *target;
-        actionTargetMap[Watchdog::Action::PowerCycle] = *target;
+        actionTargetMap[WatchdogBase::Action::HardReset] = *target;
+        actionTargetMap[WatchdogBase::Action::PowerOff] = *target;
+        actionTargetMap[WatchdogBase::Action::PowerCycle] = *target;
     }
     for (const auto& actionTarget : actionTargets)
     {
@@ -169,10 +170,10 @@ int main(int argc, char* argv[])
         std::string value = actionTarget.substr(keyValueSplit + 1);
 
         // Convert an action from a fully namespaced value
-        Watchdog::Action action;
+        WatchdogBase::Action action;
         try
         {
-            action = Watchdog::convertActionFromString(key);
+            action = WatchdogBase::convertActionFromString(key);
         }
         catch (const sdbusplus::exception::InvalidEnumString&)
         {
@@ -199,7 +200,7 @@ int main(int argc, char* argv[])
         try
         {
             fallback.action =
-                Watchdog::convertActionFromString(*fallbackAction);
+                WatchdogBase::convertActionFromString(*fallbackAction);
         }
         catch (const sdbusplus::exception::InvalidEnumString&)
         {
@@ -216,20 +217,15 @@ int main(int argc, char* argv[])
 
     try
     {
-        // Get a default event loop
-        auto event = sdeventplus::Event::get_default();
-
-        // Get a handle to system dbus.
-        auto bus = sdbusplus::bus::new_default();
+        boost::asio::io_service io;
+        auto conn = std::make_shared<sdbusplus::asio::connection>(io);
 
         // Add systemd object manager.
-        sdbusplus::server::manager::manager watchdogManager(bus, path.c_str());
-
-        // Attach the bus to sd_event to service user requests
-        bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+        sdbusplus::server::manager::manager watchdogManager(*conn,
+                                                            path.c_str());
 
         // Create a watchdog object
-        Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
+        Watchdog watchdog(io, conn, path.c_str(), std::move(actionTargetMap),
                           std::move(maybeFallback), minInterval,
                           defaultInterval);
 
@@ -237,7 +233,7 @@ int main(int argc, char* argv[])
         if (watchPostcodes)
         {
             watchPostcodeMatch.emplace(
-                bus,
+                *conn,
                 sdbusplus::bus::match::rules::propertiesChanged(
                     "/xyz/openbmc_project/state/boot/raw0",
                     "xyz.openbmc_project.State.Boot.Raw"),
@@ -246,22 +242,8 @@ int main(int argc, char* argv[])
         }
 
         // Claim the bus
-        bus.request_name(service.c_str());
-
-        bool done = false;
-        auto intCb = [&](sdeventplus::source::Signal&,
-                         const struct signalfd_siginfo*) { done = true; };
-        stdplus::signal::block(SIGINT);
-        sdeventplus::source::Signal sigint(event, SIGINT, intCb);
-        stdplus::signal::block(SIGTERM);
-        sdeventplus::source::Signal sigterm(event, SIGTERM, std::move(intCb));
-
-        // Loop until our timer expires and we don't want to continue
-        while (!done && (continueAfterTimeout || !watchdog.timerExpired()))
-        {
-            // Run and never timeout
-            event.run(std::nullopt);
-        }
+        conn->request_name(service.c_str());
+        io.run();
     }
     catch (const InternalFailure& e)
     {
