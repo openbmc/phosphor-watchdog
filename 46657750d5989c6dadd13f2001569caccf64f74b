@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9e39e385_4a1f7fec",
+        "filename": "src/watchdog.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2021-12-30T07:18:26Z",
+      "side": 1,
+      "message": "cannot call enable(value) because there will be a loop and break stuff.",
+      "range": {
+        "startLine": 134,
+        "startChar": 8,
+        "endLine": 134,
+        "endChar": 32
+      },
+      "revId": "46657750d5989c6dadd13f2001569caccf64f74b",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fd1b2435_ddfd101e",
+        "filename": "test/watchdog.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2021-12-30T07:18:26Z",
+      "side": 1,
+      "message": "This does not exactly the same as before.\n\nThe run_for() return value is the number of handler is ran during the time. It could be zero if there are no handlers that is ready.",
+      "range": {
+        "startLine": 67,
+        "startChar": 8,
+        "endLine": 73,
+        "endChar": 9
+      },
+      "revId": "46657750d5989c6dadd13f2001569caccf64f74b",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    }
+  ]
+}

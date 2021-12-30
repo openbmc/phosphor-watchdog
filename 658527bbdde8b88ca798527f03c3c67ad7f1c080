@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2914db78_1c28cd8b",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2021-12-30T07:18:26Z",
+      "side": 0,
+      "message": "Do we want to add this back somehow?",
+      "range": {
+        "startLine": 251,
+        "startChar": 8,
+        "endLine": 257,
+        "endChar": 78
+      },
+      "revId": "658527bbdde8b88ca798527f03c3c67ad7f1c080",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    }
+  ]
+}

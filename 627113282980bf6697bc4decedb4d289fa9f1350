@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "06bea7a4_7d912789",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2021-12-30T07:18:26Z",
+      "side": 1,
+      "message": "\u003e Patch Set 7:\n\u003e \n\u003e (1 comment)\n\u003e \n\u003e \u003e Patch Set 7:\n\u003e \u003e \n\u003e \u003e This one (https://gerrit.openbmc-project.xyz/c/openbmc/phosphor-health-monitor/+/42144/2/healthMonitor.cpp#531) ... used the sdbusplus::asio::sd_event_wrapper once.\n\u003e \n\u003e oh, maybe I should try that instead to see maybe that\u0027s cleaner.\n\nTried it out and it seems like it still leaks memory or just too much memory usage in general. I have removed the sdevent and its timer to use a standalone timer instead. Seems to be doing fine for now.",
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    }
+  ]
+}
