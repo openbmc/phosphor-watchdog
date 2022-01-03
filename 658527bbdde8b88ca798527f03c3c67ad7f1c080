@@ -22,6 +22,30 @@
       },
       "revId": "658527bbdde8b88ca798527f03c3c67ad7f1c080",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c4c156e7_2117873c",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-03T17:39:08Z",
+      "side": 0,
+      "message": "+1.  This should be using asio signal_set:\nhttps://www.boost.org/doc/libs/1_78_0/doc/html/boost_asio/reference/signal_set.html",
+      "parentUuid": "2914db78_1c28cd8b",
+      "range": {
+        "startLine": 251,
+        "startChar": 8,
+        "endLine": 257,
+        "endChar": 78
+      },
+      "revId": "658527bbdde8b88ca798527f03c3c67ad7f1c080",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     }
   ]
 }

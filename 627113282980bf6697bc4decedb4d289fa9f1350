@@ -16,6 +16,121 @@
       "message": "\u003e Patch Set 7:\n\u003e \n\u003e (1 comment)\n\u003e \n\u003e \u003e Patch Set 7:\n\u003e \u003e \n\u003e \u003e This one (https://gerrit.openbmc-project.xyz/c/openbmc/phosphor-health-monitor/+/42144/2/healthMonitor.cpp#531) ... used the sdbusplus::asio::sd_event_wrapper once.\n\u003e \n\u003e oh, maybe I should try that instead to see maybe that\u0027s cleaner.\n\nTried it out and it seems like it still leaks memory or just too much memory usage in general. I have removed the sdevent and its timer to use a standalone timer instead. Seems to be doing fine for now.",
       "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2c9b8b9f_f3eced22",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-03T17:39:08Z",
+      "side": 1,
+      "message": "Prefer io_context (which is the same typedef internally) for new code to match with the std proposals.",
+      "range": {
+        "startLine": 20,
+        "startChar": 21,
+        "endLine": 20,
+        "endChar": 31
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "df30925d_1141c5a0",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-03T17:39:08Z",
+      "side": 1,
+      "message": "given the whole point of this patch is to remove sd_event, I don\u0027t think this is needed?",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2bf08e46_9b4b5803",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-03T17:39:08Z",
+      "side": 1,
+      "message": "Why are you using the base class directly now?",
+      "range": {
+        "startLine": 36,
+        "startChar": 26,
+        "endLine": 36,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f1dedd06_fafaf162",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-03T17:39:08Z",
+      "side": 1,
+      "message": "Aren\u0027t these also within the Watchdog Namespace?",
+      "range": {
+        "startLine": 154,
+        "startChar": 24,
+        "endLine": 154,
+        "endChar": 36
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b0bc2587_64073a1c",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-03T17:39:08Z",
+      "side": 1,
+      "message": "We likely don\u0027t want to be managing our own loop here.  We should be managing our timers within the io_context callbacks, and simply calling run().  run_one() is going to block in weird ways that you don\u0027t expect.",
+      "range": {
+        "startLine": 249,
+        "startChar": 15,
+        "endLine": 249,
+        "endChar": 22
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     }
   ]
 }
