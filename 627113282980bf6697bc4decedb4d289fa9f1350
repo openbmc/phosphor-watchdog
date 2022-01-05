@@ -161,6 +161,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "fd97533a_53242dc5",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-05T19:07:26Z",
+      "side": 1,
+      "message": "convertActionFromString is available in the Watchdog object namespace, and was used previously there, so I still don\u0027t understand why you need to go directly to the base class.",
+      "parentUuid": "8a0cf02a_16151f41",
+      "range": {
+        "startLine": 36,
+        "startChar": 26,
+        "endLine": 36,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "f1dedd06_fafaf162",
         "filename": "src/mainapp.cpp",
         "patchSetId": 10
