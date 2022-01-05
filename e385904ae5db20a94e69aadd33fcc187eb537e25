@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c6f1321b_eedcc9d8",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-05T19:12:18Z",
+      "side": 1,
+      "message": "Once the below removal of the done parameter is completed, I think this whole lambda registration can move into the Watchdog constructor, given that the watchdog constructor already has the io_context as the first constructor parameter, and continueAfterTimeout can be passed in as a value parameter.  I think that simplifies the code quite a bit.",
+      "range": {
+        "startLine": 233,
+        "startChar": 26,
+        "endLine": 238,
+        "endChar": 27
+      },
+      "revId": "e385904ae5db20a94e69aadd33fcc187eb537e25",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "586aaee2_1d3d7fe6",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000153
+      },
+      "writtenOn": "2022-01-05T19:12:18Z",
+      "side": 1,
+      "message": "Rather than set this variable, then do the stop in the watchdog callback, should we just do io.stop() here, and remove the done variable entirely?",
+      "range": {
+        "startLine": 258,
+        "startChar": 16,
+        "endLine": 258,
+        "endChar": 28
+      },
+      "revId": "e385904ae5db20a94e69aadd33fcc187eb537e25",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    }
+  ]
+}
