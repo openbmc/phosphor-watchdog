@@ -24,6 +24,30 @@
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d7b65efb_3e3a4343",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T23:21:59Z",
+      "side": 1,
+      "message": "Done. Cleaned it up and removed the lambdas.",
+      "parentUuid": "c6f1321b_eedcc9d8",
+      "range": {
+        "startLine": 233,
+        "startChar": 26,
+        "endLine": 238,
+        "endChar": 27
+      },
+      "revId": "e385904ae5db20a94e69aadd33fcc187eb537e25",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "acc8f474_2b6c9952",
@@ -37,6 +61,30 @@
       "writtenOn": "2022-01-05T19:21:46Z",
       "side": 1,
       "message": "Rather than declare this as a variable, does it make more sense to do this inline in the async_wait call?",
+      "range": {
+        "startLine": 255,
+        "startChar": 13,
+        "endLine": 255,
+        "endChar": 18
+      },
+      "revId": "e385904ae5db20a94e69aadd33fcc187eb537e25",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0fcc4d95_7fadf449",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T23:21:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "acc8f474_2b6c9952",
       "range": {
         "startLine": 255,
         "startChar": 13,
@@ -70,6 +118,30 @@
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "a4c7c7be_c11b1e53",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T23:21:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "586aaee2_1d3d7fe6",
+      "range": {
+        "startLine": 258,
+        "startChar": 16,
+        "endLine": 258,
+        "endChar": 28
+      },
+      "revId": "e385904ae5db20a94e69aadd33fcc187eb537e25",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c6b3a7e8_b14c9f9a",
@@ -93,6 +165,30 @@
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "5266786c_4b66e6df",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T23:21:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6b3a7e8_b14c9f9a",
+      "range": {
+        "startLine": 261,
+        "startChar": 0,
+        "endLine": 263,
+        "endChar": 56
+      },
+      "revId": "e385904ae5db20a94e69aadd33fcc187eb537e25",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "fe1409c9_ad362acc",
@@ -106,6 +202,30 @@
       "writtenOn": "2022-01-05T19:21:46Z",
       "side": 1,
       "message": "Given that timer is capturing and using references within this object, it should be the last thing declared, otherwise it\u0027s possible you\u0027ll get seg faults as the timer is shutting down.",
+      "range": {
+        "startLine": 312,
+        "startChar": 0,
+        "endLine": 314,
+        "endChar": 16
+      },
+      "revId": "e385904ae5db20a94e69aadd33fcc187eb537e25",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6a10405d_0722dcf4",
+        "filename": "src/watchdog.hpp",
+        "patchSetId": 11
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T23:21:59Z",
+      "side": 1,
+      "message": "oh, interesting. Make sense.",
+      "parentUuid": "fe1409c9_ad362acc",
       "range": {
         "startLine": 312,
         "startChar": 0,
