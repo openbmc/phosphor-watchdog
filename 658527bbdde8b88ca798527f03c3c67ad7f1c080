@@ -46,6 +46,30 @@
       },
       "revId": "658527bbdde8b88ca798527f03c3c67ad7f1c080",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a6e19ba2_666b2c02",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T04:16:26Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "c4c156e7_2117873c",
+      "range": {
+        "startLine": 251,
+        "startChar": 8,
+        "endLine": 257,
+        "endChar": 78
+      },
+      "revId": "658527bbdde8b88ca798527f03c3c67ad7f1c080",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     }
   ]
 }

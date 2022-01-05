@@ -41,6 +41,30 @@
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c190705b_2f290735",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T04:16:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c9b8b9f_f3eced22",
+      "range": {
+        "startLine": 20,
+        "startChar": 21,
+        "endLine": 20,
+        "endChar": 31
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "df30925d_1141c5a0",
@@ -54,6 +78,30 @@
       "writtenOn": "2022-01-03T17:39:08Z",
       "side": 1,
       "message": "given the whole point of this patch is to remove sd_event, I don\u0027t think this is needed?",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "39016514_2cc3c981",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T04:16:26Z",
+      "side": 1,
+      "message": "oh yeah, thanks. I was testing ASIO wrapper for sdevent to see if it is better. (it was not).",
+      "parentUuid": "df30925d_1141c5a0",
       "range": {
         "startLine": 28,
         "startChar": 0,
@@ -89,6 +137,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "8a0cf02a_16151f41",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T04:16:26Z",
+      "side": 1,
+      "message": "Need it for convertActionFromString.",
+      "parentUuid": "2bf08e46_9b4b5803",
+      "range": {
+        "startLine": 36,
+        "startChar": 26,
+        "endLine": 36,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "f1dedd06_fafaf162",
         "filename": "src/mainapp.cpp",
         "patchSetId": 10
@@ -100,6 +172,30 @@
       "writtenOn": "2022-01-03T17:39:08Z",
       "side": 1,
       "message": "Aren\u0027t these also within the Watchdog Namespace?",
+      "range": {
+        "startLine": 154,
+        "startChar": 24,
+        "endLine": 154,
+        "endChar": 36
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "94a1e6f0_7989ab52",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T04:16:26Z",
+      "side": 1,
+      "message": "moved to Watchdog::Action",
+      "parentUuid": "f1dedd06_fafaf162",
       "range": {
         "startLine": 154,
         "startChar": 24,
@@ -123,6 +219,30 @@
       "writtenOn": "2022-01-03T17:39:08Z",
       "side": 1,
       "message": "We likely don\u0027t want to be managing our own loop here.  We should be managing our timers within the io_context callbacks, and simply calling run().  run_one() is going to block in weird ways that you don\u0027t expect.",
+      "range": {
+        "startLine": 249,
+        "startChar": 15,
+        "endLine": 249,
+        "endChar": 22
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6372c32a_57b07199",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-05T04:16:26Z",
+      "side": 1,
+      "message": "yeah, I moved the `continueAfterTimeout` logic to a timeout handler in Watchdog and will get triggered once the timer timeout. It will stop the io and stuff.",
+      "parentUuid": "b0bc2587_64073a1c",
       "range": {
         "startLine": 249,
         "startChar": 15,
