@@ -69,6 +69,30 @@
       },
       "revId": "46657750d5989c6dadd13f2001569caccf64f74b",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bb5fa5fc_aa197350",
+        "filename": "test/watchdog.cpp",
+        "patchSetId": 9
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-06T20:08:12Z",
+      "side": 1,
+      "message": "updated to use io.run() and rely on io.cancel to exit. Should be cleaner/better now.\n\nThanks.",
+      "parentUuid": "d1a613c2_954dbaea",
+      "range": {
+        "startLine": 67,
+        "startChar": 8,
+        "endLine": 73,
+        "endChar": 9
+      },
+      "revId": "46657750d5989c6dadd13f2001569caccf64f74b",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     }
   ]
 }
