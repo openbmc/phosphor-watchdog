@@ -281,6 +281,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "a2845418_e3ee12f2",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-07T22:50:59Z",
+      "side": 1,
+      "message": "same. Maybe WatchdogBase::... might be better?\n\n----\n\nOn a side note, William has https://gerrit.openbmc-project.xyz/c/openbmc/phosphor-watchdog/+/50187 to fix the leak issue. I haven\u0027t been able to test it yet.\n\nShould we still covert it to ASIO?",
+      "parentUuid": "7ebafb70_d2173b45",
+      "range": {
+        "startLine": 36,
+        "startChar": 26,
+        "endLine": 36,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "f1dedd06_fafaf162",
         "filename": "src/mainapp.cpp",
         "patchSetId": 10
