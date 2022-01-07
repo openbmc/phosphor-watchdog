@@ -233,6 +233,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "74b98537_48f2a50b",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-07T07:36:15Z",
+      "side": 1,
+      "message": "my understanding is that if we inherent WatchdogBase or `sdbusplus::xyz::openbmc_project::State::server::Watchdog`\n\nWe would need to use the following constructor\n```\n/** @brief Constructor to put object onto bus at a dbus path.\n         *  @param[in] bus - Bus to attach to.\n         *  @param[in] path - Path to attach at.\n         */\n        Watchdog(bus::bus\u0026 bus, const char* path);\n```\n\nwhich will force us to create the dbus object.\n\n----\n\nI couldn\u0027t use `using WatchdogBase::convertActionFromString` directly.\n\nI have set a static function to get access to it from Watchdog now. Maybe that will work better?",
+      "parentUuid": "11ffdf1b_73a453e2",
+      "range": {
+        "startLine": 36,
+        "startChar": 26,
+        "endLine": 36,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "f1dedd06_fafaf162",
         "filename": "src/mainapp.cpp",
         "patchSetId": 10
