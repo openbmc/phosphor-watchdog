@@ -305,6 +305,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "cad85fa7_a08ae391",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000188
+      },
+      "writtenOn": "2022-01-07T22:53:27Z",
+      "side": 1,
+      "message": "Also a patch to systemd that \"fixes\" it too.\nhttps://github.com/systemd/systemd/issues/22046#issuecomment-1007616665\n\nAlthough I\u0027m not sure why their eventfd is getting desyncd from processing.",
+      "parentUuid": "a2845418_e3ee12f2",
+      "range": {
+        "startLine": 36,
+        "startChar": 26,
+        "endLine": 36,
+        "endChar": 38
+      },
+      "revId": "627113282980bf6697bc4decedb4d289fa9f1350",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "f1dedd06_fafaf162",
         "filename": "src/mainapp.cpp",
         "patchSetId": 10
