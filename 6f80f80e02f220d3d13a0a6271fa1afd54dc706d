@@ -16,6 +16,23 @@
       "message": "Still debugging libsystemd to figure out exactly what is getting called out of order, but we really will want this fixed for all of the other sd-event + sd-bus based apps in the BMC stack.",
       "revId": "6f80f80e02f220d3d13a0a6271fa1afd54dc706d",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "63727329_0afdf14a",
+        "filename": "src/mainapp.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1000885
+      },
+      "writtenOn": "2022-01-07T16:25:37Z",
+      "side": 1,
+      "message": "should this be in sdeventplus instead? within the run() instead of having all application update it",
+      "revId": "6f80f80e02f220d3d13a0a6271fa1afd54dc706d",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     }
   ]
 }
