@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a9c08a03_7f415a00",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000188
+      },
+      "writtenOn": "2022-01-07T09:55:06Z",
+      "side": 1,
+      "message": "Still debugging libsystemd to figure out exactly what is getting called out of order, but we really will want this fixed for all of the other sd-event + sd-bus based apps in the BMC stack.",
+      "revId": "6f80f80e02f220d3d13a0a6271fa1afd54dc706d",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    }
+  ]
+}
