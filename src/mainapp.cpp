@@ -259,6 +259,12 @@ int main(int argc, char* argv[])
         // Loop until our timer expires and we don't want to continue
         while (!done && (continueAfterTimeout || !watchdog.timerExpired()))
         {
+            // Process all outstanding bus events before running the loop.
+            // This prevents the sd-bus handling logic from leaking memory.
+            // TODO: Remove when upstream fixes this bug
+            while (bus.process_discard() > 0)
+                ;
+
             // Run and never timeout
             event.run(std::nullopt);
         }
