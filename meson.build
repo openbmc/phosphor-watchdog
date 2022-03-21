@@ -8,6 +8,8 @@ project(
     'cpp_std=c++20',
   ])
 
+cpp = meson.get_compiler('cpp')
+
 subdir('src')
 
 if not get_option('tests').disabled()
