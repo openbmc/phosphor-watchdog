@@ -18,7 +18,7 @@ namespace watchdog
 
 constexpr auto DEFAULT_MIN_INTERVAL_MS = 0;
 namespace Base = sdbusplus::xyz::openbmc_project::State::server;
-using WatchdogInherits = sdbusplus::server::object::object<Base::Watchdog>;
+using WatchdogInherits = sdbusplus::server::object_t<Base::Watchdog>;
 
 /** @class Watchdog
  *  @brief OpenBMC watchdog implementation.
@@ -63,7 +63,7 @@ class Watchdog : public WatchdogInherits
      *  @param[in] minInterval     - minimum intervale value allowed
      *  @param[in] defaultInterval - default interval to start with
      */
-    Watchdog(sdbusplus::bus::bus& bus, const char* objPath,
+    Watchdog(sdbusplus::bus_t& bus, const char* objPath,
              const sdeventplus::Event& event,
              ActionTargetMap&& actionTargetMap = {},
              std::optional<Fallback>&& fallback = std::nullopt,
@@ -164,7 +164,7 @@ class Watchdog : public WatchdogInherits
 
   private:
     /** @brief sdbusplus handle */
-    sdbusplus::bus::bus& bus;
+    sdbusplus::bus_t& bus;
 
     /** @brief Map of systemd units to be started when the timer expires */
     ActionTargetMap actionTargetMap;

@@ -47,7 +47,7 @@ class WdogTest : public ::testing::Test
     sdeventplus::Event event;
 
     // sdbusplus handle
-    sdbusplus::bus::bus bus;
+    sdbusplus::bus_t bus;
 
     // Watchdog object
     std::unique_ptr<Watchdog> wdog;
