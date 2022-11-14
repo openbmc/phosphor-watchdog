@@ -133,19 +133,6 @@ void Watchdog::timeOutHandler()
 
         try
         {
-            auto signal = bus.new_signal(
-                objPath.data(), "xyz.openbmc_project.Watchdog", "Timeout");
-            signal.append(convertForMessage(action).c_str());
-            signal.signal_send();
-        }
-        catch (const sdbusplus::exception_t& e)
-        {
-            log<level::ERR>("watchdog: failed to send timeout signal",
-                            entry("ERROR=%s", e.what()));
-        }
-
-        try
-        {
             auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
                                               SYSTEMD_INTERFACE, "StartUnit");
             method.append(target->second);
@@ -160,6 +147,18 @@ void Watchdog::timeOutHandler()
                             entry("ERROR=%s", e.what()));
             commit<InternalFailure>();
         }
+    }
+    try
+    {
+        auto signal = bus.new_signal(objPath.data(),
+                                     "xyz.openbmc_project.Watchdog", "Timeout");
+        signal.append(convertForMessage(action).c_str());
+        signal.signal_send();
+    }
+    catch (const sdbusplus::exception_t& e)
+    {
+        log<level::ERR>("watchdog: failed to send timeout signal",
+                        entry("ERROR=%s", e.what()));
     }
 
     tryFallbackOrDisable();
