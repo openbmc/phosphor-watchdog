@@ -8,10 +8,11 @@ endif
 
 watchdog_deps = [
   CLI11_dep,
-  dependency('sdbusplus'),
-  dependency('sdeventplus'),
   dependency('phosphor-dbus-interfaces'),
   dependency('phosphor-logging'),
+  dependency('sdbusplus'),
+  dependency('sdeventplus'),
+  dependency('stdplus'),
 ]
 
 watchdog_lib = static_library(
