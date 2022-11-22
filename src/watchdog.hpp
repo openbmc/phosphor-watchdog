@@ -55,25 +55,26 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Constructs the Watchdog object
      *
-     *  @param[in] bus             - DBus bus to attach to.
-     *  @param[in] objPath         - Object path to attach to.
-     *  @param[in] event           - reference to sdeventplus::Event loop
-     *  @param[in] actionTargets   - map of systemd targets called on timeout
-     *  @param[in] fallback        - fallback watchdog
-     *  @param[in] minInterval     - minimum intervale value allowed
-     *  @param[in] defaultInterval - default interval to start with
+     *  @param[in] bus              - DBus bus to attach to.
+     *  @param[in] objPath          - Object path to attach to.
+     *  @param[in] event            - reference to sdeventplus::Event loop
+     *  @param[in] actionTargets    - map of systemd targets called on timeout
+     *  @param[in] fallback         - fallback watchdog
+     *  @param[in] minInterval      - minimum intervale value allowed
+     *  @param[in] defaultInterval  - default interval to start with
+     *  @param[in] exitAfterTimeout - should the event loop be terminated
      */
     Watchdog(sdbusplus::bus_t& bus, const char* objPath,
              const sdeventplus::Event& event,
              ActionTargetMap&& actionTargetMap = {},
              std::optional<Fallback>&& fallback = std::nullopt,
              uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS,
-             uint64_t defaultInterval = 0) :
+             uint64_t defaultInterval = 0, bool exitAfterTimeout = false) :
         WatchdogInherits(bus, objPath),
         bus(bus), actionTargetMap(std::move(actionTargetMap)),
         fallback(fallback), minInterval(minInterval),
         timer(event, std::bind(&Watchdog::timeOutHandler, this)),
-        objPath(objPath)
+        objPath(objPath), exitAfterTimeout(exitAfterTimeout)
     {
         // Use default if passed in otherwise just use default that comes
         // with object
@@ -186,6 +187,9 @@ class Watchdog : public WatchdogInherits
 
     /** @brief Object path of the watchdog */
     std::string_view objPath;
+
+    /** @brief Do we terminate after exit */
+    bool exitAfterTimeout;
 };
 
 } // namespace watchdog
