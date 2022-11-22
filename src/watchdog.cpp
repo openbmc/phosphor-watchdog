@@ -162,6 +162,11 @@ void Watchdog::timeOutHandler()
         }
     }
 
+    if (exitAfterTimeout)
+    {
+        timer.get_event().exit(0);
+    }
+
     tryFallbackOrDisable();
 }
 

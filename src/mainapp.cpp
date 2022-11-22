@@ -28,6 +28,7 @@
 #include <sdbusplus/server/manager.hpp>
 #include <sdeventplus/event.hpp>
 #include <sdeventplus/source/signal.hpp>
+#include <sdeventplus/utility/sdbus.hpp>
 #include <stdplus/signal.hpp>
 #include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
@@ -225,13 +226,11 @@ int main(int argc, char* argv[])
         // Add systemd object manager.
         sdbusplus::server::manager_t watchdogManager(bus, path.c_str());
 
-        // Attach the bus to sd_event to service user requests
-        bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
-
         // Create a watchdog object
         Watchdog watchdog(bus, path.c_str(), event, std::move(actionTargetMap),
                           std::move(maybeFallback), minInterval,
-                          defaultInterval);
+                          defaultInterval,
+                          /*exitAfterTimeout=*/!continueAfterTimeout);
 
         std::optional<sdbusplus::bus::match_t> watchPostcodeMatch;
         if (watchPostcodes)
@@ -248,26 +247,15 @@ int main(int argc, char* argv[])
         // Claim the bus
         bus.request_name(service.c_str());
 
-        bool done = false;
-        auto intCb = [&](sdeventplus::source::Signal&,
-                         const struct signalfd_siginfo*) { done = true; };
+        auto intCb = [](sdeventplus::source::Signal& s,
+                        const struct signalfd_siginfo*) {
+            s.get_event().exit(0);
+        };
         stdplus::signal::block(SIGINT);
         sdeventplus::source::Signal sigint(event, SIGINT, intCb);
         stdplus::signal::block(SIGTERM);
         sdeventplus::source::Signal sigterm(event, SIGTERM, std::move(intCb));
-
-        // Loop until our timer expires and we don't want to continue
-        while (!done && (continueAfterTimeout || !watchdog.timerExpired()))
-        {
-            // Process all outstanding bus events before running the loop.
-            // This prevents the sd-bus handling logic from leaking memory.
-            // TODO: Remove when upstream fixes this bug
-            while (bus.process_discard() > 0)
-                ;
-
-            // Run and never timeout
-            event.run(std::nullopt);
-        }
+        return sdeventplus::utility::loopWithBus(event, bus);
     }
     catch (const InternalFailure& e)
     {
@@ -276,5 +264,5 @@ int main(int argc, char* argv[])
         // Need a coredump in the error cases.
         std::terminate();
     }
-    return 0;
+    return 1;
 }
