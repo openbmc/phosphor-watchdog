@@ -16,6 +16,24 @@
       "message": "I don\u0027t follow, why does the order matter",
       "revId": "42ba92d6a51f5c78c6b38c7e9dc8245faf4214b2",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e69da935_ad1ecc76",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001074
+      },
+      "writtenOn": "2022-12-01T06:49:18Z",
+      "side": 1,
+      "message": "The intendent of patch to generate signal when \"TimerAction\" configured as \"None\".",
+      "parentUuid": "c4af0698_36198126",
+      "revId": "42ba92d6a51f5c78c6b38c7e9dc8245faf4214b2",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     }
   ]
 }
