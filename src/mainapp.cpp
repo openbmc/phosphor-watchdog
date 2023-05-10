@@ -17,9 +17,6 @@
 #include "watchdog.hpp"
 
 #include <CLI/CLI.hpp>
-#include <functional>
-#include <iostream>
-#include <optional>
 #include <phosphor-logging/elog-errors.hpp>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
@@ -30,8 +27,12 @@
 #include <sdeventplus/source/signal.hpp>
 #include <sdeventplus/utility/sdbus.hpp>
 #include <stdplus/signal.hpp>
-#include <string>
 #include <xyz/openbmc_project/Common/error.hpp>
+
+#include <functional>
+#include <iostream>
+#include <optional>
+#include <string>
 
 using phosphor::watchdog::Watchdog;
 using sdbusplus::xyz::openbmc_project::State::server::convertForMessage;
@@ -247,8 +248,8 @@ int main(int argc, char* argv[])
         // Claim the bus
         bus.request_name(service.c_str());
 
-        auto intCb = [](sdeventplus::source::Signal& s,
-                        const struct signalfd_siginfo*) {
+        auto intCb =
+            [](sdeventplus::source::Signal& s, const struct signalfd_siginfo*) {
             s.get_event().exit(0);
         };
         stdplus::signal::block(SIGINT);

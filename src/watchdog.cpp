@@ -1,12 +1,13 @@
 #include "watchdog.hpp"
 
-#include <algorithm>
-#include <chrono>
 #include <phosphor-logging/elog.hpp>
 #include <phosphor-logging/log.hpp>
 #include <sdbusplus/exception.hpp>
-#include <string_view>
 #include <xyz/openbmc_project/Common/error.hpp>
+
+#include <algorithm>
+#include <chrono>
+#include <string_view>
 
 namespace phosphor
 {

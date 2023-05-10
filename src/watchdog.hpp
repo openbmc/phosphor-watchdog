@@ -1,15 +1,16 @@
 #pragma once
 
-#include <functional>
-#include <optional>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/server/object.hpp>
 #include <sdeventplus/event.hpp>
 #include <sdeventplus/utility/timer.hpp>
+#include <xyz/openbmc_project/State/Watchdog/server.hpp>
+
+#include <functional>
+#include <optional>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
-#include <xyz/openbmc_project/State/Watchdog/server.hpp>
 
 namespace phosphor
 {

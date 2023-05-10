@@ -1,9 +1,10 @@
 #include "watchdog.hpp"
 
-#include <chrono>
-#include <memory>
 #include <sdbusplus/bus.hpp>
 #include <sdeventplus/event.hpp>
+
+#include <chrono>
+#include <memory>
 #include <thread>
 #include <utility>
 
