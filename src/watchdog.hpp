@@ -142,6 +142,13 @@ class Watchdog : public WatchdogInherits
      *
      */
     using WatchdogInherits::interval;
+    /** @brief Get value of notlog
+    *
+    *
+    *  @return: current notlog value
+    *
+    */
+    using WatchdogInherits::notlog;
 
     /** @brief Set value of Interval
      *
