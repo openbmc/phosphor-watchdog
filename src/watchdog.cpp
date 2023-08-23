@@ -151,10 +151,12 @@ void Watchdog::timeOutHandler()
     }
     try
     {
-        auto signal = bus.new_signal(objPath.data(),
-                                     "xyz.openbmc_project.Watchdog", "Timeout");
-        signal.append(convertForMessage(action).c_str());
-        signal.signal_send();
+        if (!this->notlog()) {
+            auto signal = bus.new_signal(objPath.data(),
+                                        "xyz.openbmc_project.Watchdog", "Timeout");
+            signal.append(convertForMessage(action).c_str());
+            signal.signal_send();
+        }
     }
     catch (const sdbusplus::exception_t& e)
     {
