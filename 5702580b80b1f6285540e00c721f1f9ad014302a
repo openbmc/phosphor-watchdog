@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9d04152a_db7cdf35",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2023-09-16T10:05:46Z",
+      "side": 1,
+      "message": "Hi Dan, either Nancy or Benjamin need to add you to the appropriate CLA group on Gerrit.  It appears that they added you to the Schedule A in the Google drive but you\u0027re not present in the Gerrit group for Google yet.",
+      "revId": "5702580b80b1f6285540e00c721f1f9ad014302a",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    }
+  ]
+}
