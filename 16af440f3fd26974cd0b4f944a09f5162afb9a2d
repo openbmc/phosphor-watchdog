@@ -16,6 +16,24 @@
       "message": "Why are we omitting the timeout signal when \"notlog\" is set?  The timeout still happened; we should still report it.\n\nThis code is a hack.  You\u0027re working around the fact that phosphor-sel-logging has a monitor on this signal.  Fix the underlying design rather than hacking around.",
       "revId": "16af440f3fd26974cd0b4f944a09f5162afb9a2d",
       "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8a12f14c_9b4bd9dc",
+        "filename": "src/watchdog.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1001311
+      },
+      "writtenOn": "2023-10-05T08:31:06Z",
+      "side": 1,
+      "message": "Yes, I think this way of disabling the watchdog system event log is wrong. I will abandon this commit.\nThank you for your advice!",
+      "parentUuid": "9e7f3827_bd95b120",
+      "revId": "16af440f3fd26974cd0b4f944a09f5162afb9a2d",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
     }
   ]
 }
