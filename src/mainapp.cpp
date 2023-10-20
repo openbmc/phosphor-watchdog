@@ -248,8 +248,8 @@ int main(int argc, char* argv[])
         // Claim the bus
         bus.request_name(service.c_str());
 
-        auto intCb =
-            [](sdeventplus::source::Signal& s, const struct signalfd_siginfo*) {
+        auto intCb = [](sdeventplus::source::Signal& s,
+                        const struct signalfd_siginfo*) {
             s.get_event().exit(0);
         };
         stdplus::signal::block(SIGINT);
