@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d647e4c4_bc3efbc2",
+        "filename": "test/meson.build",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1000188
+      },
+      "writtenOn": "2023-11-29T23:59:12Z",
+      "side": 1,
+      "message": "All of the uses of `enabled()` are intentional and should not be changed to `allowed()` as missing dependencies with `auto` should not cause the build to fail.",
+      "revId": "56712101e3ac3e95e62c2c026618facde7930eea",
+      "serverId": "adbd0a64-1f21-4d83-b585-671fe73cb6e4"
+    }
+  ]
+}
