@@ -32,7 +32,6 @@
 # data within them will be kept sorted.
 
 owners:
-- vishwa@linux.vnet.ibm.com
 - wak@google.com
 
 reviewers:
@@ -40,9 +39,6 @@ reviewers:
 matchers:
 
 openbmc:
-- name: Vishwanatha Subbanna
-  email: vishwa@linux.vnet.ibm.com
-  discord: vishwa
 - name: William Kennington
   email: wak@google.com
   discord: wak
