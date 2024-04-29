@@ -71,9 +71,9 @@ class Watchdog : public WatchdogInherits
              std::optional<Fallback>&& fallback = std::nullopt,
              uint64_t minInterval = DEFAULT_MIN_INTERVAL_MS,
              uint64_t defaultInterval = 0, bool exitAfterTimeout = false) :
-        WatchdogInherits(bus, objPath),
-        bus(bus), actionTargetMap(std::move(actionTargetMap)),
-        fallback(fallback), minInterval(minInterval),
+        WatchdogInherits(bus, objPath), bus(bus),
+        actionTargetMap(std::move(actionTargetMap)), fallback(fallback),
+        minInterval(minInterval),
         timer(event, std::bind(&Watchdog::timeOutHandler, this)),
         objPath(objPath), exitAfterTimeout(exitAfterTimeout)
     {
