@@ -25,7 +25,7 @@ class WdogTest : public ::testing::Test
 {
   public:
     // The unit time used to measure the timer
-    // This should be large enough to accomodate drift
+    // This should be large enough to accommodate drift
     using Quantum = duration<uint64_t, std::deci>;
 
     // Gets called as part of each TEST_F construction
@@ -475,7 +475,7 @@ TEST_F(WdogTest, enableWdogWithFallbackAlways)
                                       Watchdog::ActionTargetMap(), fallback,
                                       milliseconds(TEST_MIN_INTERVAL).count());
 
-    // Make sure defualt interval is biggger than min interval
+    // Make sure default interval is biggger than min interval
     EXPECT_LT(milliseconds((TEST_MIN_INTERVAL).count()),
               milliseconds(wdog->interval()));
 
