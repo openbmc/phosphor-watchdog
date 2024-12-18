@@ -1,0 +1,7 @@
+Code-Review+2: William A. Kennington III <wak@google.com>
+Verified+1: OpenBMC CI <openbmcbump-ci@yahoo.com>
+Submitted-by: Patrick Williams <patrick@stwcx.xyz>
+Submitted-at: Wed, 18 Dec 2024 20:00:48 +0000
+Reviewed-on: https://gerrit.openbmc.org/c/openbmc/phosphor-watchdog/+/76786
+Project: openbmc/phosphor-watchdog
+Branch: refs/heads/master
