@@ -12,6 +12,6 @@ cpp = meson.get_compiler('cpp')
 
 subdir('src')
 
-if not get_option('tests').disabled()
+if get_option('tests').allowed()
   subdir('test')
 endif
