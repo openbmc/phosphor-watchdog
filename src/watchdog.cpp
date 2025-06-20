@@ -85,7 +85,7 @@ uint64_t Watchdog::timeRemaining(uint64_t value)
         // Update interval to minInterval if applicable
         value = std::max(value, minInterval);
     }
-    else
+    else if (fallback.has_value())
     {
         // Having a timer but not displaying an enabled value means we
         // are inside of the fallback
@@ -109,7 +109,7 @@ uint64_t Watchdog::interval(uint64_t value)
 void Watchdog::timeOutHandler()
 {
     Action action = expireAction();
-    if (!this->enabled())
+    if (!this->enabled() && fallback.has_value())
     {
         action = fallback->action;
     }

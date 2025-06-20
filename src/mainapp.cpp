@@ -209,7 +209,10 @@ int main(int argc, char* argv[])
                       << std::endl;
             return 1;
         }
-        fallback.interval = *fallbackIntervalMs;
+        if (fallbackIntervalMs.has_value())
+        {
+            fallback.interval = *fallbackIntervalMs;
+        }
         fallback.always = fallbackAlways;
 
         printFallback(fallback);
