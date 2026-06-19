@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
                           defaultInterval,
                           /*exitAfterTimeout=*/!continueAfterTimeout);
 
-        std::optional<sdbusplus::bus::match_t> watchPostcodeMatch;
+        std::optional<sdbusplus::match> watchPostcodeMatch;
         if (watchPostcodes)
         {
             watchPostcodeMatch.emplace(
