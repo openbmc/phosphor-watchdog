@@ -233,12 +233,12 @@ int main(int argc, char* argv[])
                           defaultInterval,
                           /*exitAfterTimeout=*/!continueAfterTimeout);
 
-        std::optional<sdbusplus::bus::match_t> watchPostcodeMatch;
+        std::optional<sdbusplus::match> watchPostcodeMatch;
         if (watchPostcodes)
         {
             watchPostcodeMatch.emplace(
                 bus,
-                sdbusplus::bus::match::rules::propertiesChanged(
+                sdbusplus::match_rules::propertiesChanged(
                     "/xyz/openbmc_project/state/boot/raw0",
                     "xyz.openbmc_project.State.Boot.Raw"),
                 std::bind(&Watchdog::resetTimeRemaining, std::ref(watchdog),
