@@ -550,7 +550,7 @@ TEST_F(WdogTest, verifyConstructorMinIntervalSetting)
     auto minIntervalMs = milliseconds(minInterval).count();
 
     // We initiate a new Watchdog with min interval greater than the default
-    // intrval
+    // interval
     wdog.reset();
     wdog = std::make_unique<Watchdog>(bus, TEST_PATH, event,
                                       Watchdog::ActionTargetMap(), std::nullopt,
